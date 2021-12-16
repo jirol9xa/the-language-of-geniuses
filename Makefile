@@ -8,6 +8,8 @@ build: main.o Tree.o LogsLib.o TextLib.o
 	$(CC) main.o Tree.o LogsLib.o TextLib.o -o lang 
 debug: main.o Tree.o LogsLib.o TextLib.o 
 	$(CC) main.o Tree.o LogsLib.o TextLib.o -o lang $(DEBUG_FLAGS)
+suff: main.o LogsLib.o  Language.o Suff_tree.o 
+	$(CC) main.o LogsLib.o Language.o Suff_tree.o -o suff $(DEBUG_FLAGS)
 
 clear:
 	rm -rf *.o
@@ -21,3 +23,7 @@ LogsLib.o: Logger/LogsLib.cpp
 	$(CC) -c Logger/LogsLib.cpp $(I_FLAG)
 TextLib.o: TextLib/TextLib.cpp
 	$(CC) -c TextLib/TextLib.cpp $(I_FLAG)
+Suff_tree.o: Suff_tree/Suff_tree.cpp
+	$(CC) -c Suff_tree/Suff_tree.cpp $(I_FLAG)
+Language.o:	Language.cpp
+	$(CC) -c Language.cpp $(I_FLAG)

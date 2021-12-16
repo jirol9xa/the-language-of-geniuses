@@ -7,7 +7,33 @@
         int capacity;
         int size;
     };
-
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
+    // hello vovqa, i love you so fuckin much
 
     int constructTree(Tree *tree, char *string);
 

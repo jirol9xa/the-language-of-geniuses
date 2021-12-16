@@ -19,7 +19,7 @@
         {
             struct 
             {
-                unsigned is_operator : 1;
+                unsigned is_operator : 4;
                 unsigned is_number   : 1;
                 unsigned is_variable : 1;
                 unsigned is_keyword  : 1;
@@ -45,15 +45,13 @@
         } status;        
     };
     
-    struct Path
-    {
-        type_t *path;
-        int    size;
-        int    iterator;
-    };
+    //struct Path
+    //{
+    //    type_t *path;
+    //    int    size;
+    //    int    iterator;
+    //};
     
-
-
     enum StatAndErrs
     {
         EMPTY_TREE      = 1 << 0,
@@ -129,7 +127,7 @@
         \return Указатель на новый узел, -1 в противном
                 случае
     */
-    Node *searchElem(Node *node, type_t elem);
+    //Node *searchElem(Node *node, type_t elem);
     int printTree(Node *node);
     int  printNodeValue(Node *node);
 

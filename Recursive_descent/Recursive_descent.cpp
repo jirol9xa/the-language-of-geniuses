@@ -4,8 +4,9 @@
 #include <assert.h>
 #include "LogsLib.h"
 #include "Tree.h"
+#include "Suff_tree.h"
 #include "Recursive_descent.h"
-
+#include "Syntax.h"
 
 static int   lexical(Tokens *tokens, char *string);
 static int   lexAnal(Tokens *tokens);
@@ -18,13 +19,10 @@ static int   tokensResize(Tokens *tokens);
 
 static Node *GetGeneral (Tokens *tokens);
 static Node *GetNumber  (Tokens *tokens, int *iter);
-static Node *GetMulDiv  (Tokens *tokens, int *iter);
 static Node *GetPriority(Tokens *tokens, int *iter);
-static Node *GetNumber  (Tokens *tokens, int *iter);
-static Node *GetAddSub  (Tokens *tokens, int *iter);
-static Node *GetFunc    (Tokens *tokens, int *iter);
 
 
+extern const char *RESERVED_WORDS;
 char *STRING = nullptr;
 
 
@@ -203,13 +201,21 @@ static Node *identific()
         switch (node->value.func[0])
         {
             case 's':
-                node->node_type.bytes.is_sin = 1;
+                if (node->value.func[1] == 'i')
+                {
+                    node->node_type.bytes.is_func = IS_SIN;
+                    return node;
+                }
+                node->node_type.bytes.is_func = IS_SCAN;
                 return node;
             case 'c':
-                node->node_type.bytes.is_cos = 1;
+                node->node_type.bytes.is_func = IS_COS;
                 return node;
             case 'l':
-                node->node_type.bytes.is_ln = 1;
+                node->node_type.bytes.is_func = IS_LN;
+                return node;
+            case 'p':
+                node->node_type.bytes.is_func = IS_PRINT;
                 return node;
         }
     }
@@ -248,7 +254,7 @@ static Node *GetGeneral(Tokens *tokens)
 
     int iter = 0;
 
-    Node *root = GetAddSub(tokens, &iter);
+    Node *root = GetAddSub(tokens, &iter); // change to statement
 
     if (tokens->array[iter]->node_type.bytes.is_operator && tokens->array[iter]->value.symbol == '$')
     {
@@ -264,28 +270,28 @@ static Node *GetGeneral(Tokens *tokens)
 }
 
 
-static Node *GetMulDiv(Tokens *tokens, int *iter)
-{
-    assert(tokens);
-    assert(iter);
-
-    Node *oper = nullptr;
-    
-    Node *value = GetPriority(tokens, iter);
-
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/", tokens->array[*iter]->value.symbol))
-    {
-        oper = tokens->array[*iter];
-        oper->left_child = value;
-        (*iter)++;
-
-        oper->right_child = GetPriority(tokens, iter);
-
-        value = oper;
-    }
-
-    return value;
-}
+//static Node *GetMulDiv(Tokens *tokens, int *iter)
+//{
+//    assert(tokens);
+//    assert(iter);
+//
+//    Node *oper = nullptr;
+//    
+//    Node *value = GetPriority(tokens, iter);
+//
+//    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/", tokens->array[*iter]->value.symbol))
+//    {
+//        oper = tokens->array[*iter];
+//        oper->left_child = value;
+//        (*iter)++;
+//
+//        oper->right_child = GetPriority(tokens, iter);
+//
+//        value = oper;
+//    }
+//
+//    return value;
+//}
 
 
 static Node *GetPriority(Tokens *tokens, int *iter)
@@ -340,38 +346,11 @@ static Node *GetNumber(Tokens *tokens, int *iter)
 }
 
 
-static Node *GetFunc(Tokens *tokens, int *iter)
+static Node *suffixTree(const char *res_words)
 {
-    assert(tokens);
-    assert(iter);
+    assert(res_words);
 
-    Node *func = tokens->array[*iter];
-    (*iter)++;
+    Tree suff_tree = {};
+    treeCtor(&suff_tree);
     
-    func->left_child = GetPriority(tokens, iter);
-
-    return func;
-}
-
-
-static Node *GetAddSub(Tokens *tokens, int *iter)
-{
-    assert(tokens);
-    assert(iter);
-
-    Node *oper = nullptr;
-    Node *value = GetMulDiv(tokens, iter);
-
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-", tokens->array[*iter]->value.symbol))
-    {
-        oper = tokens->array[*iter];
-        oper->left_child = value;
-        (*iter)++;
-
-        oper->right_child = GetMulDiv(tokens, iter);
-
-        value = oper;
-    }    
-
-    return value;
 }
