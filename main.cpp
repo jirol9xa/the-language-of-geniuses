@@ -22,7 +22,6 @@ int main(const int argc, const char **argv)
     printSuffTree(tree->root);
     //suffDump(tree);
 
-    PRINT_LINE;
     printf("is searched = %d\n", isKeyword("return", tree));
 
     suffNodeDtor(tree->root);

@@ -16,6 +16,7 @@
     {
         int        start;
         int        length;
+        int        status;
         Suff_node *next;
     };
     // hello vovqa, i love you so fuckin much

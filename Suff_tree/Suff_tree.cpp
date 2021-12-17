@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <cmath>
 #include "LogsLib.h"
 #include "Suff_tree.h"
 #include "Syntax.h"
@@ -10,10 +11,18 @@
 extern const char *RESERVED_WORDS;
 extern const int   LETTERS_AMOUNT;
 
+const int IS_IF     = 1;
+const int IS_WHILE  = 1 << 2;
+const int IS_RETURN = 1 << 2 + 1;
+const int IS_CONST  = 1 << 3;
+const int IS_MAIN   = 1 << 3 + 1;
+const int IS_DEFINE = 1 << 4;
+
+
 
 static void printSuffNode(Suff_node *node);
 static void printEdge(Edge *edge);
-static int *addWord(Edge *edge, int iter, int wrd_size);
+static int *addWord(Edge *edge, int iter, int wrd_size, int status);
 static int suffSearch(char *cmd, Suff_node *node, int iter);
 static int myStrcmp(const char *string, int end1, const char *standart, int end2);
 
@@ -112,42 +121,47 @@ Suff_Tree *suffTreeCtor()
 
     while (RESERVED_WORDS[i] != '\0')
     {
-        PRINT_LINE;
         int wrd_size = 0;
-        while (RESERVED_WORDS[wrd_size + i] != '$')
+
+        while (RESERVED_WORDS[wrd_size + i] >= 'a' && RESERVED_WORDS[wrd_size + i] <= 'z')
         {
             wrd_size++;
         }
+
+        int status = 0;
+
+        sscanf(RESERVED_WORDS + wrd_size + i, "%d", &status);
 
         Edge **edge = &(tree->root->edges[RESERVED_WORDS[i] - 'a']);
 
         if (*edge == nullptr)
         {
-            *edge = edgeCtor();
-            (*edge)->start = i;
+            *edge           = edgeCtor();
+            (*edge)->start  = i;
             (*edge)->length = wrd_size;
+            (*edge)->status = status;
         
-            i += wrd_size + 1;
+            i += wrd_size + 2 + (int) log10(status);
 
             continue;
         }
-        PRINT_LINE;
-        addWord(*edge, i, wrd_size);
 
-        i += wrd_size + 1;
+        addWord(*edge, i, wrd_size, status);
+
+        i += wrd_size + 2 + (int) log10(status);
     }
 
     return tree;
 }
 
 
-static int *addWord(Edge *edge, int iter, int wrd_size)
+static int *addWord(Edge *edge, int iter, int wrd_size, int status)
 {
     assert(edge);
 
     if (edge->next)
     {
-        addWord(edge->next->edges[RESERVED_WORDS[iter + 1] - 'a'], iter + 1, wrd_size - 1);
+        addWord(edge->next->edges[RESERVED_WORDS[iter + 1] - 'a'], iter + 1, wrd_size - 1, status);
 
         return 0;
     }
@@ -162,11 +176,14 @@ static int *addWord(Edge *edge, int iter, int wrd_size)
 
     (*old_edge)->start  = edge->start + 1;
     (*old_edge)->length = edge->length - 1;
+    (*old_edge)->status = edge->status;
 
     edge->length = 1;
+    edge->status = 0;
 
     (*new_edge)->start  = iter + 1;
     (*new_edge)->length = wrd_size - 1;
+    (*new_edge)->status = status;
 
     return 0;
 }
@@ -181,8 +198,8 @@ void printSuffTree(Suff_node *node)
         if (node->edges[i])
         {
             Edge *edge = node->edges[i];
-            printf("start = %d, len = %d, next = %p, begin = %c, end = %c\n", edge->start, edge->length, edge->next, 
-                    RESERVED_WORDS[edge->start], RESERVED_WORDS[edge->start + edge->length - 1]);
+            printf("start = %d, len = %d, next = %p, begin = %c, end = %c, status = %d\n", edge->start, edge->length, edge->next, 
+                    RESERVED_WORDS[edge->start], RESERVED_WORDS[edge->start + edge->length - 1], edge->status);
 
             if (edge->next)
             {

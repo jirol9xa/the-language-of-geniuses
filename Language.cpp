@@ -8,7 +8,7 @@
 #include "Language.h"
 
     
-char *RESERVED_WORDS = "if$while$return$int$";
+char *RESERVED_WORDS = "if1$while2$return3$";
 int   LETTERS_AMOUNT = 26;
     // hello vovqa, i love you so fuckin much
 
