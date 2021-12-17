@@ -18,11 +18,12 @@
         {
             struct 
             {
-                unsigned is_keyword  : 4;
-                unsigned is_operator : 4;
-                unsigned is_number   : 1;
-                unsigned is_variable : 1;
-                unsigned is_func     : 3;
+                unsigned is_keyword   : 4;
+                unsigned is_operator  : 4;
+                unsigned is_number    : 1;
+                unsigned is_variable  : 1;
+                unsigned is_func      : 3;
+                unsigned is_serv_node : 3;
             } bytes;
 
             unsigned int number;

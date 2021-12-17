@@ -128,7 +128,7 @@ int finish_text(Text *Onegin)
 int skipSpace(char *string)
 {
     int i = 0;
-    for (; i < (int) strlen(string) && string[i] == ' '; i++)
+    for (; i < (int) strlen(string) && (string[i] == ' ' || string[i] == '\n'); i++)
         ;
 
     return i;

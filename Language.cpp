@@ -2,25 +2,16 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "Tree.h"
+#include "Syntax.h"
 #include "LogsLib.h"
 #include "TextLib.h"
 #include "Recursive_descent.h"
 #include "Language.h"
 
     
-char *RESERVED_WORDS = "if1$while2$return3$sin32$cos64$ln96$";
+char *RESERVED_WORDS = "if1$while2$return3$sin32$cos64$ln96$main9$define16$"; //fix codes
 int   LETTERS_AMOUNT = 26;
     // hello vovqa, i love you so fuckin much
-const int IS_IF     = 1;
-const int IS_WHILE  = 1 << 2;
-const int IS_RETURN = 1 << 2 + 1;
-const int IS_CONST  = 1 << 3;
-const int IS_MAIN   = 1 << 3 + 1;
-const int IS_DEFINE = 1 << 4;
-
-const int IS_SIN    = 1 << 5;
-const int IS_COS    = 1 << 6;
-const int IS_LN     = 1 << 6 + 1;
 
 
 int readCode(FILE *sourse, Tree *tree)

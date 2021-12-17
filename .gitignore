@@ -1,3 +1,4 @@
 *.o
 LOGS/*
 ./vscode/*
+lang
