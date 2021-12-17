@@ -11,20 +11,26 @@
 extern const char *RESERVED_WORDS;
 extern const int   LETTERS_AMOUNT;
 
-const int IS_IF     = 1;
-const int IS_WHILE  = 1 << 2;
-const int IS_RETURN = 1 << 2 + 1;
-const int IS_CONST  = 1 << 3;
-const int IS_MAIN   = 1 << 3 + 1;
-const int IS_DEFINE = 1 << 4;
+extern int IS_IF;  
+extern int IS_WHILE;
+extern int IS_RETURN;
+extern int IS_CONST;
+extern int IS_MAIN;
+extern int IS_DEFINE;
+
+extern int IS_SIN    = 1 << 5;
+extern int IS_COS    = 1 << 6;
+extern int IS_LN     = 1 << 6 + 1;
 
 
 
 static void printSuffNode(Suff_node *node);
 static void printEdge(Edge *edge);
 static int *addWord(Edge *edge, int iter, int wrd_size, int status);
-static int suffSearch(char *cmd, Suff_node *node, int iter);
-static int myStrcmp(const char *string, int end1, const char *standart, int end2);
+static int  suffSearch(char *cmd, Suff_node *node, int iter);
+static int  myStrcmp(const char *string, int end1, const char *standart, int end2);
+static int  suffNodeDtor(Suff_node *node);
+
 
 
 Suff_node *suffNodeCtor()
@@ -90,7 +96,16 @@ static void printEdge(Edge *edge)
 }
 
 
-int suffNodeDtor(Suff_node *node)
+int suffTreeDtor(Suff_Tree *tree)
+{
+    assert(tree);
+
+    suffNodeDtor(tree->root);
+    free(tree);
+}
+
+
+static int suffNodeDtor(Suff_node *node)
 {
     assert(node);
 
@@ -217,7 +232,7 @@ int isKeyword(char *cmd, Suff_Tree *tree)
     assert(cmd);
     assert(tree);
 
-    return !suffSearch(cmd, tree->root, 0);
+    return suffSearch(cmd, tree->root, 0);
 }
 
 
@@ -227,7 +242,7 @@ static int suffSearch(char *cmd, Suff_node *node, int iter)
     assert(node);
     if (abs(cmd[iter] - 'a') > 26)
     {
-        return -1;
+        return 0;
     }
 
     Edge *edge = node->edges[cmd[iter] - 'a'];
@@ -236,7 +251,7 @@ static int suffSearch(char *cmd, Suff_node *node, int iter)
     {
         if (myStrcmp(cmd + iter, strlen(cmd), RESERVED_WORDS + edge->start, edge->length))
         {
-            return -1;
+            return 0;
         }
 
         iter += edge->length;
@@ -249,10 +264,10 @@ static int suffSearch(char *cmd, Suff_node *node, int iter)
 
     if (!edge || edge->next || iter != strlen(cmd))
     {
-        return -1;
+        return 0;
     }
     
-    return 0;
+    return edge->status;
 }
 
 

@@ -8,35 +8,45 @@
 #include "Language.h"
 
     
-char *RESERVED_WORDS = "if1$while2$return3$";
+char *RESERVED_WORDS = "if1$while2$return3$sin32$cos64$ln96$";
 int   LETTERS_AMOUNT = 26;
     // hello vovqa, i love you so fuckin much
+const int IS_IF     = 1;
+const int IS_WHILE  = 1 << 2;
+const int IS_RETURN = 1 << 2 + 1;
+const int IS_CONST  = 1 << 3;
+const int IS_MAIN   = 1 << 3 + 1;
+const int IS_DEFINE = 1 << 4;
+
+const int IS_SIN    = 1 << 5;
+const int IS_COS    = 1 << 6;
+const int IS_LN     = 1 << 6 + 1;
 
 
-//int readCode(FILE *sourse, Tree *tree)
-//{
-//    assert(sourse);
-//    assert(tree);
-//    if (tree->status.destructed_tree)
-//    {
-//        printf("!!! ERROR Can't work with destructed tree !!!\n");
-//        return -1;
-//    }
-//
-//    // мб юзать библиотеку онегина и перегон в построчный текст
-//
-//    long int file_length = 0;
-//    fileLength(&file_length, sourse);
-//
-//    char *text = (char *) calloc(file_length + 1, sizeof(char));
-//    long int num_symb = fread(text, sizeof(char), file_length, sourse);
-//
-//    text[num_symb] = '\0';
-//
-//    constructTree(tree, text);
-//
-//    return 0;
-//}
+int readCode(FILE *sourse, Tree *tree)
+{
+    assert(sourse);
+    assert(tree);
+    if (tree->status.destructed_tree)
+    {
+        printf("!!! ERROR Can't work with destructed tree !!!\n");
+        return -1;
+    }
+
+    // мб юзать библиотеку онегина и перегон в построчный текст
+
+    long int file_length = 0;
+    fileLength(&file_length, sourse);
+
+    char *text = (char *) calloc(file_length + 1, sizeof(char));
+    long int num_symb = fread(text, sizeof(char), file_length, sourse);
+
+    text[num_symb] = '\0';
+
+    constructTree(tree, text);
+
+    return 0;
+}
 //
 //
 //static unsigned int MurmurHash2(char* key, unsigned int len) 

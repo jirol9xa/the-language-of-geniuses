@@ -4,11 +4,11 @@ DEBUG_FLAGS = -fsanitize=address,leak,undefined -Wall -g
 
 all: build
 
-build: main.o Tree.o LogsLib.o TextLib.o
-	$(CC) main.o Tree.o LogsLib.o TextLib.o -o lang 
-debug: main.o Tree.o LogsLib.o TextLib.o 
-	$(CC) main.o Tree.o LogsLib.o TextLib.o -o lang $(DEBUG_FLAGS)
-suff: main.o LogsLib.o  Language.o Suff_tree.o 
+build: main.o Tree.o LogsLib.o TextLib.o Recursive_descent.o Suff_tree.o Language.o
+	$(CC) main.o Tree.o LogsLib.o TextLib.o Recursive_descent.o Suff_tree.o Language.o -o lang 
+debug: main.o Tree.o LogsLib.o TextLib.o Recursive_descent.o Suff_tree.o Language.o
+	$(CC) main.o Tree.o LogsLib.o TextLib.o Recursive_descent.o Suff_tree.o Language.o -o lang  $(DEBUG_FLAGS)
+suff: main.o LogsLib.o  Language.o Suff_tree.o
 	$(CC) main.o LogsLib.o Language.o Suff_tree.o -o suff $(DEBUG_FLAGS)
 
 clear:
@@ -27,3 +27,5 @@ Suff_tree.o: Suff_tree/Suff_tree.cpp
 	$(CC) -c Suff_tree/Suff_tree.cpp $(I_FLAG)
 Language.o:	Language.cpp
 	$(CC) -c Language.cpp $(I_FLAG)
+Recursive_descent.o: Recursive_descent/Recursive_descent.cpp
+	$(CC) -c Recursive_descent/Recursive_descent.cpp $(I_FLAG)

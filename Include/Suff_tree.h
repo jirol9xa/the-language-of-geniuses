@@ -43,14 +43,11 @@
 
     
     Suff_node *suffNodeCtor();
-    int        suffNodeDtor(Suff_node *node);
     Edge      *edgeCtor();
     Suff_Tree *suffTreeCtor();
+    int        suffTreeDtor(Suff_Tree *tree);
     int        suffDump(Suff_Tree *tree);
     void       printSuffTree(Suff_node *node);
     int        isKeyword(char *cmd, Suff_Tree *tree);
-
-
-
 
 #endif

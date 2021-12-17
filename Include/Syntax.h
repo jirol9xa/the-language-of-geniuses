@@ -15,10 +15,4 @@
 
     // hello vovqa, i love you so fuckin much
 
-    const int IS_SIN   = 1;
-    const int IS_COS   = 2;
-    const int IS_LN    = 3;
-    const int IS_PRINT = 4;
-    const int IS_SCAN  = 5;
-
 #endif

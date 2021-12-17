@@ -8,8 +8,7 @@
     union Value
     {
         double number;
-        char   symbol;
-        char  *func;
+        char  *str;
     };
 
     struct Node 
@@ -19,10 +18,10 @@
         {
             struct 
             {
+                unsigned is_keyword  : 4;
                 unsigned is_operator : 4;
                 unsigned is_number   : 1;
                 unsigned is_variable : 1;
-                unsigned is_keyword  : 1;
                 unsigned is_func     : 3;
             } bytes;
 
