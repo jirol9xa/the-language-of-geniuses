@@ -8,25 +8,37 @@
 #include "Suff_tree.h"
 #include "Recursive_descent.h"
 #include "Syntax.h"
+#include "Lexer.h"
 
-static int lexical      (Tokens *tokens, char *string);
-//static int lexAnal(Tokens *tokens);
-static int tokensCtor   (Tokens *tokens);
-static Node *number     ();
-static Node *identific  ();
-static Node *oper       ();
-static int SyntaxError  ();
-static int tokensResize (Tokens *tokens);
-static int lexAnal      (Tokens *tokens);
 
-static Node *GetGeneral (Tokens *tokens);
-static Node *GetArg     (Tokens *tokens, int *iter);
-static Node *GetPriority(Tokens *tokens, int *iter);
+static int constructTokens(Tokens_t *tokens, char *string);
+static int tokensCtor(Tokens_t *tokens);
+static Node *number();
+static Node *identific();
+static Node *oper();
+static int tokensResize(Tokens_t *tokens);
+
+static Node *GetGeneral(Tokens_t *tokens);
+static Node *GetArg(Tokens_t *tokens, int *iter);
+static Node *GetPriority(Tokens_t *tokens, int *iter);
+static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left); // for reading left or right value
+static Node *GetFunc(Tokens_t *tokens, int *iter);
+static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func);
+static Node *GetLogicOper(Tokens_t *tokens, int *iter);
+static Node *GetOperator(Tokens_t *tokens, int *iter);
+static Node *GetIf(Tokens_t *tokens, int *iter);
+static Node *GetWhile(Tokens_t *tokens, int *iter);
+static Node *readStatement(Tokens_t *tokens, int *iter); //for reading statement
+static Node *GetStatement(Tokens_t *tokens, int *iter);
+static Node *GetExternStatement(Tokens_t *tokens, int *iter);
+static int skipBrkts(Tokens_t *tokens, int *iter, int is_open);
+
 
 extern const char *RESERVED_WORDS;
 extern const int LETTERS_AMOUNT;
 
 char *STRING = nullptr;
+
 
 int constructTree(Tree *tree, char *string)
 {
@@ -38,10 +50,10 @@ int constructTree(Tree *tree, char *string)
         return -1;
     }
 
-    Tokens tokens = {};
+    Tokens_t tokens = {};
     tokensCtor(&tokens);
 
-    lexical(&tokens, string);
+    constructTokens(&tokens, string);
 
     //tree->root = GetGeneral(&tokens);
     //
@@ -69,13 +81,14 @@ int constructTree(Tree *tree, char *string)
     return 0;
 }
 
+
 /*!
     \brief  Func of lex anal))))
-    \param  [Tokens *]tokens Pointer to tokens struct
+    \param  [Tokens_t *]tokens Pointer to tokens struct
     \param  [char *]string Array with code
     \return 0 if all right
 */
-static int lexical(Tokens *tokens, char *string)
+static int constructTokens(Tokens_t *tokens, char *string)
 {
     assert(tokens);
     assert(string);
@@ -160,20 +173,8 @@ static int lexical(Tokens *tokens, char *string)
     return -1;
 }
 
-//static int lexAnal(Tokens *tokens)
-//{
-//    assert(tokens);
-//
-//    Suff_Tree *suff_tree = suffTreeCtor();
-//
-//    for (int i = 0; i < tokens->size; i++)
-//    {
-//
-//    }
-//    return 0;
-//}
 
-static int tokensCtor(Tokens *tokens)
+static int tokensCtor(Tokens_t *tokens)
 {
     assert(tokens);
 
@@ -183,13 +184,15 @@ static int tokensCtor(Tokens *tokens)
     return 0;
 }
 
-static int tokensDtor(Tokens *tokens)
+
+static int tokensDtor(Tokens_t *tokens)
 {
     assert(tokens);
 
     free(tokens);
     return 0;
 }
+
 
 static Node *number()
 {
@@ -209,6 +212,7 @@ static Node *number()
 
     return node;
 }
+
 
 static Node *identific()
 {
@@ -271,6 +275,7 @@ static Node *identific()
     return nullptr;
 }
 
+
 static Node *oper()
 {
     Node *node = (Node *)calloc(1, sizeof(Node));
@@ -301,13 +306,15 @@ static Node *oper()
     return node;
 }
 
-static int SyntaxError()
+
+int SyntaxError()
 {
     printf("!!! ERROR SyntaxError !!!\n");
     exit(1);
 }
 
-static Node *GetGeneral(Tokens *tokens)
+
+static Node *GetGeneral(Tokens_t *tokens)
 {
     assert(tokens);
 
@@ -331,33 +338,56 @@ static Node *GetGeneral(Tokens *tokens)
 
 /*!
     \brief  Function for reading external statement
-    \param  [Tokens *]tokens Pointer to tokens
+    \param  [Tokens_t *]tokens Pointer to tokens
     \param  [int *]iter Pointer to current token
     \return [Node *] Pointer to new sub tree
 */
-static Node *GetExternStatement(Tokens *tokens, int *iter)
+static Node *GetExternStatement(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
-    Node *stmnt = (Node *) calloc(1, sizeof(Node));
+    if (*iter = tokens->size)
+    {
+        return nullptr;
+    }
 
+    Node *node = tokens->array[*iter];
 
+    if (node->node_type.bytes.is_keyword & IS_CONST || node->node_type.bytes.is_variable)
+    {
+        Node *equal = (Node *)calloc(1, sizeof(Node));
+        Node *type = (Node *)calloc(1, sizeof(Node));
 
+        Node *name =
+    }
+
+    //Node *stmnt = (Node *) calloc(1, sizeof(Node));
 }
 
-
-static Node *GetStatement(Tokens *tokens, int *iter)
+/*!
+    \brief Function for reading statement inside the function
+*/
+static Node *GetStatement(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
-    Node *stmnt = (Node *) calloc(1, sizeof(Node));
+    Node *stmnt = nullptr;
+    Node *value = nullptr;
 
-    //while
+#define KEY_NUMBER tokens->array[*iter]->node_type.bytes.is_keyword
+
+    while (tokens->array[*iter]->value.str[0] != '}' && (!KEY_NUMBER & IS_WHILE) && (!KEY_NUMBER & IS_IF))
+    {
+        value = readStatement(tokens, iter);
+
+        *iter++;
+    }
 }
 
-static Node *readStatement(Tokens *tokens, int *iter)
+
+static Node *readStatement(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
@@ -368,58 +398,78 @@ static Node *readStatement(Tokens *tokens, int *iter)
 
     //if (tokens->size = *iter + 1)
 
+    //Node *node = tokens->array[*iter];
+
+    if (!TYPE_BYTES(*iter).is_func && !TYPE_BYTES(*iter).is_variable)
+    {
+        SyntaxError();
+    }
+
+    if (TYPE_BYTES(*iter).is_func)
+    {
+        
+    }
+
     int stmnt_type = 0;
     int i = 0;
 
-    while (IS_NUM(*iter + i) || IS_VAR(*iter + i))
-    {
-        if (IS_NUM(*iter + 1) && IS_NUM(*iter + i + 1) || IS_VAR(*iter + i) && IS_VAR(*iter + i + 1))
-        {
-            SyntaxError();
-        }
+    if ()
 
-        i++;
-    }
-
-    if (TYPE_BYTES(*iter + i).is_keyword)
-    {
-        // add creating if, while
-    }
-    else if (TYPE_BYTES(*iter + i).is_operator)
-    {
-        // add creating operations
-    }
-    else if (TYPE_BYTES(*iter + i).is_func)
-    {
-        // add creating functions
-    }
-    else               // TODO:
-    {                  // Delete
-        PRINT_LINE;    // this
-        SyntaxError(); // ssssshhhhhh
-    }                  // it
-
+    //while (TYPE_BYTES(*iter).is_number || (tokens->array[*iter]->value.str[0] != ';')) //(IS_NUM(*iter + i) || IS_VAR(*iter + i))
+    //{
+    //    if (IS_NUM(*iter + 1) && IS_NUM(*iter + i + 1) || IS_VAR(*iter + i) && IS_VAR(*iter + i + 1))
+    //    {
+    //        SyntaxError();
+    //    }
+//
+    //    i++;
+    //}
+//
+    //if (TYPE_BYTES(*iter + i).is_keyword)
+    //{
+    //    // add creating if, while
+    //}
+    //else if (TYPE_BYTES(*iter + i).is_operator)
+    //{
+    //    // add creating operations
+    //}
+    //else if (TYPE_BYTES(*iter + i).is_func)
+    //{
+    //    // add creating functions
+    //}
+    //else               // TODO:
+    //{                  // Delete
+    //    PRINT_LINE;    // this
+    //    SyntaxError(); // ssssshhhhhh
+    //}                  // it
+//
 #undef IS_NUM
 #undef IS_VAR
 #undef TYPE_BYTES
 }
 
 
-static Node *GetWhile(Tokens *tokens, int *iter)
+/*!
+    \brief Function for writing "while" in the Tree
+*/
+static Node *GetWhile(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
     Node *while_ = tokens->array[*iter++];
 
-    while_->left_child  = GetOperator(tokens, iter);
+    while_->left_child = GetOperator(tokens, iter);
     while_->right_child = GetStatement(tokens, iter); // mb bulshit
 
     return while_;
 }
 
 
-static Node *GetIf(Tokens *tokens, int *iter)
+/*!
+    \brief Function for writing "If" in the tree
+*/
+static Node *GetIf(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
@@ -427,17 +477,18 @@ static Node *GetIf(Tokens *tokens, int *iter)
     Node *if_ = tokens->array[*iter++];
 
     if_->left_child = GetOperator(tokens, iter);
-
 }
 
 
+// Use GetArg or GerLRValue
+// func is too big
 /*!
     \brief  Function that building sub tree for (<>=+*-/)
     \param  [Tokens *]tokens Pointer to tokens
     \param  [int *]iter Position of current token
     \return Pointer on sub tree 
 */
-static Node *GetOperator(Tokens *tokens, int *iter)
+static Node *GetOperator(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
@@ -453,7 +504,7 @@ static Node *GetOperator(Tokens *tokens, int *iter)
         SyntaxError();
     }
 
-    Node *oper  = tokens->array[*iter++];
+    Node *oper = tokens->array[*iter++];
 
     Node *r_val = tokens->array[*iter++];
     if (!r_val->node_type.bytes.is_variable || !r_val->node_type.bytes.is_number)
@@ -461,14 +512,17 @@ static Node *GetOperator(Tokens *tokens, int *iter)
         SyntaxError();
     }
 
-    oper->left_child  = l_val;
+    oper->left_child = l_val;
     oper->right_child = r_val;
 
     return oper;
 }
 
 
-static Node *GetLogicOper(Tokens *tokens, int *iter)
+/*!
+    \brief Fucntion for complex logical operations
+*/
+static Node *GetLogicOper(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
@@ -491,30 +545,158 @@ static Node *GetLogicOper(Tokens *tokens, int *iter)
     return l_value;
 }
 
-//static Node *GetMulDiv(Tokens *tokens, int *iter)
-//{
-//    assert(tokens);
-//    assert(iter);
-//
-//    Node *oper = nullptr;
-//
-//    Node *value = GetPriority(tokens, iter);
-//
-//    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/", tokens->array[*iter]->value.symbol))
-//    {
-//        oper = tokens->array[*iter];
-//        oper->left_child = value;
-//        (*iter)++;
-//
-//        oper->right_child = GetPriority(tokens, iter);
-//
-//        value = oper;
-//    }
-//
-//    return value;
-//}
 
-static Node *GetPriority(Tokens *tokens, int *iter)
+/*!
+    \brief Function for geetting number or variable
+*/
+static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *node = nullptr;
+
+    // mb SitaxError is too much
+
+    if (node->node_type.bytes.is_number || node->node_type.bytes.is_variable)
+    {
+        node = tokens->array[*iter++];
+    }
+    if (is_func && node->node_type.bytes.is_func)
+    {
+        node = tokens->array[*iter++];
+    }
+
+    return node;
+}
+
+
+/*!
+    \brief Function for getting function (generate call)
+*/
+static Node *GetFunc(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *func = tokens->array[*iter];
+    Node *args = nullptr;
+
+    if (!func->node_type.bytes.is_func)
+    {
+        return nullptr;
+    }
+
+    (*iter)++;
+
+    if (strstr("sincosln", func->value.str))
+    {
+        func->right_child = GetNumVar(tokens, iter, 0);
+
+        return func;
+    }
+
+    args = GetArg(tokens, iter);
+
+    func->right_child = args;
+
+    return func;
+}
+
+
+/*!
+    \brief Fucntion for getting LRValue
+*/
+static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left) // for reading left or right value
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *node = tokens->array[*iter];
+
+    if (is_left)
+    {
+        if (!node->node_type.bytes.is_variable)
+        {
+            SyntaxError();
+        }
+
+        return node;
+    }
+
+    if (node->node_type.bytes.is_operator)
+    {
+        SyntaxError();
+    }
+
+    return node;
+}
+
+
+/*!
+    \brief Function for skipping brackets
+*/
+static int skipBrkts(Tokens_t *tokens, int *iter, int is_open)
+{
+    assert(tokens);
+    assert(iter);
+
+    int is_skipped = 0;
+
+    if (is_open)
+    {
+        while (strlen(tokens->array[*iter]->value.str) == 1 && strchr("(", tokens->array[*iter]->value.str[0]))
+        {
+            is_skipped++;
+
+            free(tokens->array[*iter]); //mb segfold
+            (*iter)++;
+        }
+    }
+
+    if (!is_open)
+    {
+        while (strlen(tokens->array[*iter]->value.str) == 1 && strchr(")", tokens->array[*iter]->value.str[0]))
+        {
+            is_skipped++;
+
+            free(tokens->array[*iter]); //mb segfold
+            (*iter)++;
+        }
+    }
+
+    return !is_skipped;
+}
+
+
+static Node *GetMulDiv(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *oper = nullptr;
+
+    Node *value = GetPriority(tokens, iter);
+
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/&|", tokens->array[*iter]->value.str[0]))
+    {
+        oper = tokens->array[*iter];
+        oper->left_child = value;
+        (*iter)++;
+
+        oper->right_child = GetPriority(tokens, iter);
+
+        value = oper;
+    }
+
+    return value;
+}
+
+
+/*!
+    \brief Fucntion for getting ()
+*/
+static Node *GetPriority(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
@@ -524,7 +706,7 @@ static Node *GetPriority(Tokens *tokens, int *iter)
         (*iter)++;
         free(tokens->array[*iter - 1]);
 
-        Node *value = GetLogicOper(tokens, iter);
+        Node *value = GetAddSub(tokens, iter);
 
         if (tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == ')')
         {
@@ -537,77 +719,137 @@ static Node *GetPriority(Tokens *tokens, int *iter)
     }
     else
     {
-        return GetArg(tokens, iter);
+        return GetNumVar(tokens, iter, 1);
     }
 
     return nullptr;
 }
 
 
-static Node *GetArg(Tokens *tokens, int *iter)
+/*!
+    \brief Function for getting args in func
+*/
+static Node *GetArgs(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
-    if (tokens->array[*iter]->node_type.bytes.is_number || tokens->array[*iter]->node_type.bytes.is_variable)
+    if (!skipBrkts(tokens, iter, 1))
     {
-        (*iter)++;
-
-        return tokens->array[*iter - 1];
+        SyntaxError();
     }
+
+    Node *args = GetAddSub(tokens, iter);
+    Node *next_arg = nullptr;
+    Node *param_node = nullptr;
+
+    while (tokens->array[*iter]->value.str[0] != ')')
+    {
+        next_arg = GetAddSub(tokens, iter);
+
+        if (!next_arg)
+        {
+            //next_arg = tokens->array[*iter];
+            //*iter++;
+            return args;
+        }
+
+        param_node = (Node *)calloc(1, sizeof(Node));
+
+        param_node->parent = args;
+        args->left_child = param_node;
+
+        param_node->right_child = next_arg;
+        next_arg->parent = param_node;
+
+        if (tokens->array[*iter]->value.str[0] == ',')
+        {
+            *iter++;
+        }
+
+        args = param_node;
+    }
+
+    *iter++;
+
+    return args;
+    //return tokens->array[*iter - 1];
+
     //else if (tokens->array[*iter]->node_type.bytes.is_func)
     //{
     //    Node *func = GetFunc(tokens, iter);
     //    return func;
     //}
-
-    SyntaxError();
-    return nullptr;
 }
 
-static int lexAnal(Tokens *tokens)
+
+static Node *GetBlock(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
+    assert(iter);
 
-    Suff_Tree *suff_tree = suffTreeCtor();
+    static int in_block = 0;
 
-    int insd_rnd_brack = 0;
-    int insd_fig_brack = 0;
+    Node *node = GetStatement(tokens, iter);
 
-    for (int i = 0; i < tokens->size; i++)
+    do
     {
-        Node *token = tokens->array[i];
+        int is_open = tokens->array[*iter]->value.str[0] == '{';
+        // node = call function
+        in_block += is_open + (-1) * !is_open;
+    } while (!in_block);
 
-        insd_rnd_brack += (token->value.str[0] == '(');
-        insd_rnd_brack -= (token->value.str[0] == ')');
+    return node;
+}
 
-        insd_fig_brack += (token->value.str[0] == '{');
-        insd_fig_brack -= (token->value.str[0] == '}');
 
-        if (token->node_type.bytes.is_variable)
-        {
-            int status = isKeyword(token->value.str, suff_tree);
+/*!
+    \brief Function for getting definition of func
+*/
+static Node *GetDefine(Tokens_t tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
 
-            token->node_type.number = status + !status;
+    Node *def_node = (Node *)calloc(1, sizeof(Node));
+    Node *func_node = (Node *)calloc(1, sizeof(Node));
 
-            if (!status && tokens->array[i + 1]->value.str[0] == '(')
-            {
-                token->node_type.number = 0;
-                token->node_type.bytes.is_func = 1;
-            }
-        }
+    def_node->node_type.bytes.is_serv_node = 1;
+    def_node->node_type.bytes.is_keyword = IS_DEFINE;
+
+    //strcpy(def_node->value.str, "define");
+
+    func_node->node_type.bytes.is_serv_node = 1;
+    func_node->node_type.bytes.is_keyword = IS_FUNCTION;
+
+    func_node->left_child = tokens.array[*iter++];
+    func_node->right_child = GetArgs(tokens, iter);
+
+    def_node->left_child = func_node;
+    def_node->right_child = GetStatement(tokens, iter);
+
+    return def_node;
+}
+
+
+static Node *GetAddSub(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *oper = nullptr;
+    Node *value = GetMulDiv(tokens, iter);
+
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-<>=", tokens->array[*iter]->value.symbol))
+    {
+        oper = tokens->array[*iter];
+        oper->left_child = value;
+        (*iter)++;
+
+        oper->right_child = GetMulDiv(tokens, iter);
+
+        value = oper;
     }
 
-    if (insd_fig_brack || insd_rnd_brack)
-    {
-        SyntaxError();
-    }
-
-    for (int i = 0; i < tokens->size; i++)
-    {
-        printf("str = %s, status = %d\n", tokens->array[i]->value.str, tokens->array[i]->node_type.number);
-    }
-
-    suffTreeDtor(suff_tree);
-    return 0;
+    return value;
 }
