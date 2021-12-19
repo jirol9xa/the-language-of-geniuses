@@ -18,8 +18,8 @@
         {
             struct 
             {
-                unsigned is_keyword   : 4;
-                unsigned is_operator  : 4;
+                unsigned is_keyword   : 7;
+                unsigned is_operator  : 1;
                 unsigned is_number    : 1;
                 unsigned is_variable  : 1;
                 unsigned is_func      : 3;
@@ -132,5 +132,13 @@
     int  printNodeValue(Node *node);
 
 
+    #define IS_DTRCT(arg)                                                  \
+    {                                                                      \
+        if (arg->status.destructed_tree)                                   \
+        {                                                                  \
+            printf("!!! ERROR Can't work with destructed tree !!!\n");     \
+            return -1;                                                     \
+        }                                                                  \
+    }                                                                      
 
 #endif

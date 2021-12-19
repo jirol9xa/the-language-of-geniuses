@@ -17,18 +17,18 @@
 
     enum KEY_TYPES
     {
-        IS_IF     = 1,
-        IS_WHILE  = 1 << 2,
-        IS_RETURN = 1 << 2 + 1,
-        IS_CONST  = 1 << 3,
-        IS_MAIN   = 1 << 3 + 1,
-        IS_DEFINE = 1 << 3 + 1 << 2,
-        IS_STATEMENT = 1 << 4 + 1,
-        IS_FUNCTION  = 1 << 4 + 1 + 1 << 2,
+        IS_IF        =  1,
+        IS_WHILE     = (1 << 1),
+        IS_RETURN    = (1 << 1) + 1,
+        IS_CONST     = (1 << 2),
+        IS_MAIN      = (1 << 2) + 1,
+        IS_DEFINE    = (1 << 2) + (1 << 1),
+        IS_STATEMENT = (1 << 2) + (1 << 1) + 1,
+        IS_FUNCTION  = (1 << 3),
 
-        IS_SIN    = 1 << 6,
-        IS_COS    = 1 << 7,
-        IS_LN     = 1 << 7 + 1,     
+        IS_SIN       = (1 << 3) + 1,
+        IS_COS       = (1 << 3) + (1 << 1),
+        IS_LN        = (1 << 3) + (1 << 1) + 1,     
     };
 
 #endif

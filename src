@@ -1,1 +1,17 @@
-while (x > y15) = return$
+define foo(a, b)
+{
+    x = a;
+}
+
+GLOBAL_VAR   = 4;
+GLOBAL_VAR_2 = 28 * 4;
+
+define main()
+{
+    var = 3 * 8 + 1;
+}
+
+define bar()
+{
+    x = GLOBAL_VAR;
+}$

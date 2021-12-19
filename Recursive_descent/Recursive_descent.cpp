@@ -10,13 +10,13 @@
 #include "Syntax.h"
 #include "Lexer.h"
 
-
 static int constructTokens(Tokens_t *tokens, char *string);
 static int tokensCtor(Tokens_t *tokens);
+static int tokensDtor(Tokens_t *tokens);
+static int tokensResize(Tokens_t *tokens);
 static Node *number();
 static Node *identific();
 static Node *oper();
-static int tokensResize(Tokens_t *tokens);
 
 static Node *GetGeneral(Tokens_t *tokens);
 static Node *GetArg(Tokens_t *tokens, int *iter);
@@ -31,14 +31,45 @@ static Node *GetWhile(Tokens_t *tokens, int *iter);
 static Node *readStatement(Tokens_t *tokens, int *iter); //for reading statement
 static Node *GetStatement(Tokens_t *tokens, int *iter);
 static Node *GetExternStatement(Tokens_t *tokens, int *iter);
-static int skipBrkts(Tokens_t *tokens, int *iter, int is_open);
+static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const);
+static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global);
+static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round);
+static Node *GetAddSub(Tokens_t *tokens, int *iter);
+static Node *GetDefine(Tokens_t *tokens, int *iter);
 
+#define INC(arg) ((*arg)++)
+
+#define PRINT_RESHETKA printf("#######################################\n");
+
+#define TYPE_BYTES(arg) tokens->array[*arg]->node_type.bytes
+
+#define PRINT_NODE(arg)                         \
+    {                                           \
+        if (arg->node_type.bytes.is_number)     \
+        {                                       \
+            printf("%lg\n", arg->value.number); \
+        }                                       \
+        else                                    \
+        {                                       \
+            printf("%s\n", arg->value.str);     \
+        }                                       \
+    }
+
+#define SYNTAX_ERR                 \
+    {                              \
+        PRINT_RESHETKA;            \
+        printf("Syntax err in\n"); \
+        PRINT_RESHETKA;            \
+        PRINT_LINE;                \
+        SyntaxError();             \
+    }
+
+#define FIRST_SYMB(iter) tokens->array[*iter]->value.str[0]
 
 extern const char *RESERVED_WORDS;
 extern const int LETTERS_AMOUNT;
 
 char *STRING = nullptr;
-
 
 int constructTree(Tree *tree, char *string)
 {
@@ -55,32 +86,29 @@ int constructTree(Tree *tree, char *string)
 
     constructTokens(&tokens, string);
 
-    //tree->root = GetGeneral(&tokens);
-    //
-    //
-    //
+    tree->root = GetGeneral(&tokens);
+
+    treeDump(tree);
+
     PRINT_LINE;
-    for (int i = 0; i < tokens.size; i++)
-    {
-        PRINT_LINE;
-        printf("tkn = %p\n", tokens.array[i]);
-        if (!tokens.array[i]->node_type.bytes.is_number)
-        {
-            PRINT_LINE;
-            printf("str = %s\n", tokens.array[i]->value.str);
-            PRINT_LINE;
-            free(tokens.array[i]->value.str);
-        }
-        PRINT_LINE;
-        free(tokens.array[i]);
-    }
-    free(tokens.array); // delete this!!!
-    //
-    //
-    //
+    //for (int i = 0; i < tokens.size; i++)
+    //{
+    //    PRINT_LINE;
+    //    printf("tkn = %p\n", tokens.array[i]);
+    //    if (!tokens.array[i]->node_type.bytes.is_number)
+    //    {
+    //        PRINT_LINE;
+    //        printf("str = %s\n", tokens.array[i]->value.str);
+    //        PRINT_LINE;
+    //        free(tokens.array[i]->value.str);
+    //    }
+    //    PRINT_LINE;
+    //    free(tokens.array[i]);
+    //}
+    tokensDtor(&tokens); // delete this!!!
+
     return 0;
 }
-
 
 /*!
     \brief  Func of lex anal))))
@@ -120,7 +148,7 @@ static int constructTokens(Tokens_t *tokens, char *string)
             tokens->array[tokens->size] = number();
             tokens->size++;
         }
-        else if (*STRING >= 'a' && *STRING <= 'z')
+        else if (*STRING >= 'a' && *STRING <= 'z' || *STRING >= 'A' && *STRING <= 'Z')
         {
             tokens->array[tokens->size] = identific();
             tokens->size++;
@@ -153,26 +181,29 @@ static int constructTokens(Tokens_t *tokens, char *string)
             }
         }
 
-        Node **last_node = &(tokens->array[tokens->size]);
-
         lexAnal(tokens);
 
-        *last_node = (Node *)calloc(1, sizeof(Node));
+        Node **last_node = &(tokens->array[tokens->size]);
+
+        (*last_node) = (Node *)calloc(1, sizeof(Node));
         (*last_node)->node_type.bytes.is_operator = 1;
 
         (*last_node)->value.str = (char *)calloc(2, sizeof(char));
         (*last_node)->value.str[0] = '$';
         (*last_node)->value.str[1] = '\0';
 
+        PRINT_LINE;
+
+        PRINT_NODE((*last_node));
+
         tokens->size++;
 
         return 0;
     }
 
-    SyntaxError();
+    SYNTAX_ERR;
     return -1;
 }
-
 
 static int tokensCtor(Tokens_t *tokens)
 {
@@ -184,15 +215,13 @@ static int tokensCtor(Tokens_t *tokens)
     return 0;
 }
 
-
 static int tokensDtor(Tokens_t *tokens)
 {
     assert(tokens);
 
-    free(tokens);
+    free(tokens->array);
     return 0;
 }
-
 
 static Node *number()
 {
@@ -213,13 +242,14 @@ static Node *number()
     return node;
 }
 
-
 static Node *identific()
 {
     Node *node = (Node *)calloc(1, sizeof(Node));
     char buffer[33] = {};
 
-    sscanf(STRING, "%[a-z,0-9,-,_]s", buffer);
+    sscanf(STRING, "%[a-zA-Z0-9_-]", buffer);
+
+    printf("ident = %s\n", buffer);
 
     STRING += strlen(buffer);
 
@@ -271,10 +301,9 @@ static Node *identific()
     //    }
     //}
 
-    //SyntaxError();
+    //SYNTAX_ERR;
     return nullptr;
 }
-
 
 static Node *oper()
 {
@@ -284,7 +313,7 @@ static Node *oper()
     node->value.str[0] = *STRING++;
     node->value.str[1] = '\0';
 
-    if (!strchr("<>=", node->value.str[0]))
+    if (strchr("<>=", node->value.str[0]))
     {
         if (*STRING == '=')
         {
@@ -293,19 +322,20 @@ static Node *oper()
         }
     }
 
-    STRING += skipSpace(STRING);
+    PRINT_LINE;
+    printf("value = %s\n", node->value.str);
 
+    STRING += skipSpace(STRING);
     node->node_type.bytes.is_operator = 1;
 
     if (!strchr("+-/*^()$>=<{};,", node->value.str[0]))
     {
         PRINT_LINE;
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
     return node;
 }
-
 
 int SyntaxError()
 {
@@ -313,14 +343,13 @@ int SyntaxError()
     exit(1);
 }
 
-
 static Node *GetGeneral(Tokens_t *tokens)
 {
     assert(tokens);
 
     int iter = 0;
 
-    //Node *root = GetAddSub(tokens, &iter);  change to statement I don't know what exactly
+    Node *root = GetExternStatement(tokens, &iter); // change to statement I don't know what exactly
 
     if (tokens->array[iter]->node_type.bytes.is_operator && tokens->array[iter]->value.str[0] == '$')
     {
@@ -328,13 +357,12 @@ static Node *GetGeneral(Tokens_t *tokens)
     }
     else
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
     free(tokens->array[iter - 1]);
-    //return root;
+    return root;
 }
-
 
 /*!
     \brief  Function for reading external statement
@@ -347,22 +375,74 @@ static Node *GetExternStatement(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    if (*iter = tokens->size)
+    //todo while(*iter != tokens->size)
+
+    Node *ext_stmnt = nullptr;
+    Node *stmnt = nullptr;
+
+    PRINT_LINE;
+    while (!(tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == '$'))
     {
-        return nullptr;
+        PRINT_LINE;
+        PRINT_NODE(tokens->array[*iter]);
+
+        stmnt = (Node *)calloc(1, sizeof(Node));
+        PRINT_LINE;
+
+        stmnt->node_type.bytes.is_serv_node = 1;
+
+        stmnt->value.str = (char *)calloc(10, sizeof(char));
+        strcpy(stmnt->value.str, "statement");
+        PRINT_LINE;
+
+        Node *node = tokens->array[*iter];
+
+        PRINT_LINE;
+
+        int is_const = (node->node_type.bytes.is_keyword == IS_CONST);
+
+        PRINT_LINE;
+
+        if (is_const || node->node_type.bytes.is_variable)
+        {
+            //INC(iter); skip const
+            PRINT_LINE;
+            Node *equal = GetGlobal(tokens, iter, is_const);
+
+            INC(iter); // skipping ;
+
+            stmnt->right_child = equal;
+            equal->parent = stmnt;
+        }
+        else if (node->node_type.bytes.is_keyword = IS_DEFINE)
+        {
+            PRINT_LINE;
+            PRINT_NODE(node);
+
+            stmnt->right_child = GetDefine(tokens, iter);
+            stmnt->right_child->parent = stmnt;
+
+            PRINT_LINE;
+
+            PRINT_NODE(tokens->array[*iter]);
+
+            if (skipBrkts(tokens, iter, 0, 0))
+            {
+                SYNTAX_ERR;
+            }
+
+            PRINT_NODE(tokens->array[*iter]);
+        }
+        else
+        {
+            SYNTAX_ERR;
+        }
+
+        stmnt->left_child = ext_stmnt;
+        ext_stmnt = stmnt;
     }
 
-    Node *node = tokens->array[*iter];
-
-    if (node->node_type.bytes.is_keyword & IS_CONST || node->node_type.bytes.is_variable)
-    {
-        Node *equal = (Node *)calloc(1, sizeof(Node));
-        Node *type = (Node *)calloc(1, sizeof(Node));
-
-        Node *name =
-    }
-
-    //Node *stmnt = (Node *) calloc(1, sizeof(Node));
+    return ext_stmnt;
 }
 
 /*!
@@ -373,81 +453,100 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    Node *stmnt = nullptr;
+    Node *stmnt = readStatement(tokens, iter);
     Node *value = nullptr;
 
 #define KEY_NUMBER tokens->array[*iter]->node_type.bytes.is_keyword
 
-    while (tokens->array[*iter]->value.str[0] != '}' && (!KEY_NUMBER & IS_WHILE) && (!KEY_NUMBER & IS_IF))
+    while (tokens->array[*iter]->value.str[0] != '}' && (KEY_NUMBER != IS_WHILE) && (KEY_NUMBER != IS_IF))
     {
+        PRINT_RESHETKA;
+        PRINT_RESHETKA;
+        PRINT_RESHETKA;
+
+        PRINT_NODE(tokens->array[*iter]);
+
         value = readStatement(tokens, iter);
 
-        *iter++;
-    }
-}
+        value->left_child = stmnt;
+        stmnt->parent = value;
 
+        stmnt = value;
+        //INC(iter);
+    }
+
+    return stmnt;
+}
 
 static Node *readStatement(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
-    #define IS_NUM(arg)     tokens->array[arg]->node_type.bytes.is_number
-    #define IS_VAR(arg)     tokens->array[arg]->node_type.bytes.is_variable
-    #define TYPE_BYTES(arg) tokens->array[arg]->node_type.bytes
+    skipBrkts(tokens, iter, 1, 0);
 
     //if (tokens->size = *iter + 1)
 
     //Node *node = tokens->array[*iter];
+    Node *stmnt = (Node *)calloc(1, sizeof(Node));
 
-    if (!TYPE_BYTES(*iter).is_func && !TYPE_BYTES(*iter).is_variable)
+    stmnt->node_type.bytes.is_serv_node = 1;
+
+    stmnt->value.str = (char *)calloc(10, sizeof(char));
+    strcpy(stmnt->value.str, "statement");
+
+    Node *stmnt_val = nullptr;
+
+    PRINT_NODE(tokens->array[*iter]);
+
+    if (!TYPE_BYTES(iter).is_func && !TYPE_BYTES(iter).is_variable)
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
-    if (TYPE_BYTES(*iter).is_func)
+    if (TYPE_BYTES(iter).is_func)
     {
-        
+        PRINT_LINE;
+        PRINT_NODE(tokens->array[*iter]);
+        PRINT_LINE;
+        stmnt_val = GetFunc(tokens, iter);
+
+        if (!TYPE_BYTES(iter).is_operator && tokens->array[*iter]->value.str[0] != ';')
+        {
+            SYNTAX_ERR;
+        }
+
+        INC(iter);
+        return stmnt_val;
     }
 
-    int stmnt_type = 0;
-    int i = 0;
+    if (!TYPE_BYTES(iter + 1).is_operator && tokens->array[*iter + 1]->value.str[0] != '=')
+    {
+        SYNTAX_ERR;
+    }
 
-    if ()
+    stmnt_val = tokens->array[*iter + 1];
+    stmnt_val->left_child = tokens->array[*iter];
 
-    //while (TYPE_BYTES(*iter).is_number || (tokens->array[*iter]->value.str[0] != ';')) //(IS_NUM(*iter + i) || IS_VAR(*iter + i))
-    //{
-    //    if (IS_NUM(*iter + 1) && IS_NUM(*iter + i + 1) || IS_VAR(*iter + i) && IS_VAR(*iter + i + 1))
-    //    {
-    //        SyntaxError();
-    //    }
-//
-    //    i++;
-    //}
-//
-    //if (TYPE_BYTES(*iter + i).is_keyword)
-    //{
-    //    // add creating if, while
-    //}
-    //else if (TYPE_BYTES(*iter + i).is_operator)
-    //{
-    //    // add creating operations
-    //}
-    //else if (TYPE_BYTES(*iter + i).is_func)
-    //{
-    //    // add creating functions
-    //}
-    //else               // TODO:
-    //{                  // Delete
-    //    PRINT_LINE;    // this
-    //    SyntaxError(); // ssssshhhhhh
-    //}                  // it
-//
-#undef IS_NUM
-#undef IS_VAR
-#undef TYPE_BYTES
+    (*iter) += 2;
+
+    PRINT_LINE;
+    stmnt_val->right_child = GetAddSub(tokens, iter);
+
+    //INC(iter);
+
+    if (!TYPE_BYTES(iter).is_operator || tokens->array[*iter]->value.str[0] != ';')
+    {
+        SYNTAX_ERR;
+    }
+
+    INC(iter);
+
+    stmnt->right_child = stmnt_val;
+    stmnt_val->parent = stmnt;
+
+    return stmnt;
 }
-
 
 /*!
     \brief Function for writing "while" in the Tree
@@ -457,14 +556,13 @@ static Node *GetWhile(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    Node *while_ = tokens->array[*iter++];
+    Node *while_ = tokens->array[(*iter)++];
 
     while_->left_child = GetOperator(tokens, iter);
     while_->right_child = GetStatement(tokens, iter); // mb bulshit
 
     return while_;
 }
-
 
 /*!
     \brief Function for writing "If" in the tree
@@ -474,11 +572,10 @@ static Node *GetIf(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    Node *if_ = tokens->array[*iter++];
+    Node *if_ = tokens->array[(*iter)++];
 
     if_->left_child = GetOperator(tokens, iter);
 }
-
 
 // Use GetArg or GerLRValue
 // func is too big
@@ -495,21 +592,21 @@ static Node *GetOperator(Tokens_t *tokens, int *iter)
 
     if (!tokens->array[*iter + 1]->node_type.bytes.is_operator || *iter >= (tokens->size - 3))
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
-    Node *l_val = tokens->array[*iter++];
+    Node *l_val = tokens->array[(*iter)++];
     if (!l_val->node_type.bytes.is_variable || !l_val->node_type.bytes.is_number)
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
-    Node *oper = tokens->array[*iter++];
+    Node *oper = tokens->array[(*iter)++];
 
-    Node *r_val = tokens->array[*iter++];
+    Node *r_val = tokens->array[(*iter)++];
     if (!r_val->node_type.bytes.is_variable || !r_val->node_type.bytes.is_number)
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
     oper->left_child = l_val;
@@ -517,7 +614,6 @@ static Node *GetOperator(Tokens_t *tokens, int *iter)
 
     return oper;
 }
-
 
 /*!
     \brief Fucntion for complex logical operations
@@ -535,7 +631,7 @@ static Node *GetLogicOper(Tokens_t *tokens, int *iter)
     {
         logic_oper = tokens->array[*iter];
         logic_oper->left_child = l_value;
-        (*iter)++;
+        INC(iter);
 
         logic_oper->right_child = GetPriority(tokens, iter);
 
@@ -545,7 +641,6 @@ static Node *GetLogicOper(Tokens_t *tokens, int *iter)
     return l_value;
 }
 
-
 /*!
     \brief Function for geetting number or variable
 */
@@ -554,22 +649,29 @@ static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func)
     assert(tokens);
     assert(iter);
 
-    Node *node = nullptr;
+    Node *node = tokens->array[*iter];
+
+    PRINT_NODE(tokens->array[*iter]);
 
     // mb SitaxError is too much
 
     if (node->node_type.bytes.is_number || node->node_type.bytes.is_variable)
     {
-        node = tokens->array[*iter++];
+        INC(iter);
+
+        return node;
     }
     if (is_func && node->node_type.bytes.is_func)
     {
-        node = tokens->array[*iter++];
+        PRINT_LINE;
+
+        return GetFunc(tokens, iter);
     }
 
-    return node;
-}
+    printf("Node = %p\n", node);
 
+    return nullptr;
+}
 
 /*!
     \brief Function for getting function (generate call)
@@ -579,30 +681,31 @@ static Node *GetFunc(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    Node *func = tokens->array[*iter];
-    Node *args = nullptr;
+    Node *call_node = (Node *)calloc(1, sizeof(Node));
+    Node *func_node = (Node *)calloc(1, sizeof(Node));
 
-    if (!func->node_type.bytes.is_func)
-    {
-        return nullptr;
-    }
+    call_node->node_type.bytes.is_serv_node = 1;
+    func_node->node_type.bytes.is_serv_node = 1;
 
-    (*iter)++;
+    call_node->value.str = (char *)calloc(5, sizeof(char));
+    func_node->value.str = (char *)calloc(5, sizeof(char));
 
-    if (strstr("sincosln", func->value.str))
-    {
-        func->right_child = GetNumVar(tokens, iter, 0);
+    strcpy(call_node->value.str, "call");
+    strcpy(func_node->value.str, "func");
 
-        return func;
-    }
+    func_node->left_child = tokens->array[(*iter)++];
+    func_node->left_child->parent = func_node;
 
-    args = GetArg(tokens, iter);
+    PRINT_NODE(tokens->array[*iter]);
 
-    func->right_child = args;
+    func_node->right_child = GetArgs(tokens, iter, 0);
+    func_node->right_child->parent = func_node;
 
-    return func;
+    call_node->right_child = func_node;
+    func_node->parent      = call_node;
+
+    return call_node;
 }
-
 
 /*!
     \brief Fucntion for getting LRValue
@@ -618,7 +721,7 @@ static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left) // for reading
     {
         if (!node->node_type.bytes.is_variable)
         {
-            SyntaxError();
+            SYNTAX_ERR;
         }
 
         return node;
@@ -626,17 +729,16 @@ static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left) // for reading
 
     if (node->node_type.bytes.is_operator)
     {
-        SyntaxError();
+        SYNTAX_ERR;
     }
 
     return node;
 }
 
-
 /*!
     \brief Function for skipping brackets
 */
-static int skipBrkts(Tokens_t *tokens, int *iter, int is_open)
+static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
 {
     assert(tokens);
     assert(iter);
@@ -645,29 +747,58 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open)
 
     if (is_open)
     {
-        while (strlen(tokens->array[*iter]->value.str) == 1 && strchr("(", tokens->array[*iter]->value.str[0]))
+        if (is_round)
         {
-            is_skipped++;
+            while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == '(')
+            {
+                is_skipped++;
 
-            free(tokens->array[*iter]); //mb segfold
-            (*iter)++;
+                free(tokens->array[*iter]); //mb segfold
+                INC(iter);
+            }
+        }
+        else
+        {
+            while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == '{')
+            {
+                is_skipped++;
+
+                free(tokens->array[*iter]); //mb segfold
+                INC(iter);
+            }
         }
     }
 
     if (!is_open)
     {
-        while (strlen(tokens->array[*iter]->value.str) == 1 && strchr(")", tokens->array[*iter]->value.str[0]))
+        if (is_round)
         {
-            is_skipped++;
+            while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == ')')
+            {
+                is_skipped++;
 
-            free(tokens->array[*iter]); //mb segfold
-            (*iter)++;
+                free(tokens->array[*iter]); //mb segfold
+                INC(iter);
+            }
+        }
+        else
+        {
+            while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == '}')
+            {
+                PRINT_LINE;
+                is_skipped++;
+
+                free(tokens->array[*iter]); //mb segfold
+                INC(iter);
+                PRINT_LINE;
+                PRINT_NODE(tokens->array[*iter]);
+                PRINT_LINE;
+            }
         }
     }
 
     return !is_skipped;
 }
-
 
 static Node *GetMulDiv(Tokens_t *tokens, int *iter)
 {
@@ -682,7 +813,7 @@ static Node *GetMulDiv(Tokens_t *tokens, int *iter)
     {
         oper = tokens->array[*iter];
         oper->left_child = value;
-        (*iter)++;
+        INC(iter);
 
         oper->right_child = GetPriority(tokens, iter);
 
@@ -691,7 +822,6 @@ static Node *GetMulDiv(Tokens_t *tokens, int *iter)
 
     return value;
 }
-
 
 /*!
     \brief Fucntion for getting ()
@@ -703,19 +833,19 @@ static Node *GetPriority(Tokens_t *tokens, int *iter)
 
     if (tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == '(')
     {
-        (*iter)++;
+        INC(iter);
         free(tokens->array[*iter - 1]);
 
         Node *value = GetAddSub(tokens, iter);
 
         if (tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == ')')
         {
-            (*iter)++;
+            INC(iter);
             free(tokens->array[*iter - 1]);
             return value;
         }
 
-        SyntaxError();
+        SYNTAX_ERR;
     }
     else
     {
@@ -725,54 +855,93 @@ static Node *GetPriority(Tokens_t *tokens, int *iter)
     return nullptr;
 }
 
-
 /*!
     \brief Function for getting args in func
 */
-static Node *GetArgs(Tokens_t *tokens, int *iter)
+static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
 {
     assert(tokens);
     assert(iter);
 
-    if (!skipBrkts(tokens, iter, 1))
+    PRINT_LINE;
+
+    if (!for_global && skipBrkts(tokens, iter, 1, 1))
     {
-        SyntaxError();
+        printf("Node = ");
+        PRINT_NODE(tokens->array[*iter]);
+        SYNTAX_ERR;
+    }
+
+    PRINT_NODE(tokens->array[*iter]);
+
+    // checking for a function without arguments
+    if (!skipBrkts(tokens, iter, 0, 1))
+    {
+        return nullptr;
     }
 
     Node *args = GetAddSub(tokens, iter);
-    Node *next_arg = nullptr;
-    Node *param_node = nullptr;
+    Node *param_node = (Node *)calloc(1, sizeof(Node));
 
-    while (tokens->array[*iter]->value.str[0] != ')')
+    param_node->node_type.bytes.is_serv_node = 1;
+
+    param_node->value.str = (char *)calloc(6, sizeof(char));
+    strcpy(param_node->value.str, "param");
+
+    param_node->right_child = args;
+    args->parent = param_node;
+
+    while ((!TYPE_BYTES(iter).is_operator || FIRST_SYMB(iter) != ')') && FIRST_SYMB(iter) != ';')
     {
-        next_arg = GetAddSub(tokens, iter);
+        if (!TYPE_BYTES(iter).is_number && FIRST_SYMB(iter) == ',')
+        {
+            free(tokens->array[*iter]->value.str);
+            free(tokens->array[*iter]);
+
+            INC(iter);
+        }
+        PRINT_LINE;
+
+        Node *next_arg = GetAddSub(tokens, iter);
 
         if (!next_arg)
         {
             //next_arg = tokens->array[*iter];
-            //*iter++;
-            return args;
+            //INC(iter);
+            return param_node;
+            ;
         }
 
-        param_node = (Node *)calloc(1, sizeof(Node));
+        Node *new_param_node = (Node *)calloc(1, sizeof(Node));
 
-        param_node->parent = args;
-        args->left_child = param_node;
+        new_param_node->node_type.bytes.is_serv_node = 1;
 
-        param_node->right_child = next_arg;
-        next_arg->parent = param_node;
+        new_param_node->value.str = (char *)calloc(6, sizeof(char));
+        strcpy(new_param_node->value.str, "param");
 
-        if (tokens->array[*iter]->value.str[0] == ',')
+        new_param_node->right_child = next_arg;
+        next_arg->parent = new_param_node;
+
+        new_param_node->left_child = param_node;
+        param_node->parent = new_param_node;
+
+        param_node = new_param_node;
+
+        if (TYPE_BYTES(iter).is_operator && tokens->array[*iter]->value.str[0] == ',')
         {
-            *iter++;
-        }
+            free(tokens->array[*iter]->value.str);
+            free(tokens->array[*iter]);
 
-        args = param_node;
+            INC(iter);
+        }
     }
 
-    *iter++;
+    if (TYPE_BYTES(iter).is_operator && FIRST_SYMB(iter) == ')')
+    {
+        INC(iter);
+    }
 
-    return args;
+    return param_node;
     //return tokens->array[*iter - 1];
 
     //else if (tokens->array[*iter]->node_type.bytes.is_func)
@@ -781,7 +950,6 @@ static Node *GetArgs(Tokens_t *tokens, int *iter)
     //    return func;
     //}
 }
-
 
 static Node *GetBlock(Tokens_t *tokens, int *iter)
 {
@@ -802,35 +970,41 @@ static Node *GetBlock(Tokens_t *tokens, int *iter)
     return node;
 }
 
-
 /*!
     \brief Function for getting definition of func
 */
-static Node *GetDefine(Tokens_t tokens, int *iter)
+static Node *GetDefine(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
 
-    Node *def_node = (Node *)calloc(1, sizeof(Node));
+    Node *def_node = tokens->array[(*iter)++];
     Node *func_node = (Node *)calloc(1, sizeof(Node));
 
     def_node->node_type.bytes.is_serv_node = 1;
-    def_node->node_type.bytes.is_keyword = IS_DEFINE;
 
     //strcpy(def_node->value.str, "define");
 
     func_node->node_type.bytes.is_serv_node = 1;
     func_node->node_type.bytes.is_keyword = IS_FUNCTION;
 
-    func_node->left_child = tokens.array[*iter++];
-    func_node->right_child = GetArgs(tokens, iter);
+    func_node->value.str = (char *)calloc(5, sizeof(char));
+    strcpy(func_node->value.str, "func");
+
+    PRINT_NODE(tokens->array[*iter]);
+    func_node->left_child = tokens->array[(*iter)++]; // skip func name
+    PRINT_LINE;
+    PRINT_NODE(tokens->array[*iter]);
+
+    func_node->right_child = GetArgs(tokens, iter, 0);
 
     def_node->left_child = func_node;
     def_node->right_child = GetStatement(tokens, iter);
 
+    PRINT_LINE;
+
     return def_node;
 }
-
 
 static Node *GetAddSub(Tokens_t *tokens, int *iter)
 {
@@ -840,11 +1014,11 @@ static Node *GetAddSub(Tokens_t *tokens, int *iter)
     Node *oper = nullptr;
     Node *value = GetMulDiv(tokens, iter);
 
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-<>=", tokens->array[*iter]->value.symbol))
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-<>=", tokens->array[*iter]->value.str[0]))
     {
         oper = tokens->array[*iter];
         oper->left_child = value;
-        (*iter)++;
+        INC(iter);
 
         oper->right_child = GetMulDiv(tokens, iter);
 
@@ -852,4 +1026,77 @@ static Node *GetAddSub(Tokens_t *tokens, int *iter)
     }
 
     return value;
+}
+
+static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
+{
+    assert(tokens);
+    assert(iter);
+
+    (*iter) += is_const;
+
+    Node *name_node = tokens->array[(*iter)++];
+
+    Node *equal = tokens->array[(*iter)++];
+
+    if (!equal->node_type.bytes.is_operator || equal->value.str[0] != '=')
+    {
+        SYNTAX_ERR;
+    }
+
+    equal->left_child = name_node;
+    name_node->parent = equal;
+
+    equal->right_child = GetArgs(tokens, iter, 1); //returned with param_node
+    
+
+    if (!equal->right_child)
+    {
+        SYNTAX_ERR;
+    }
+    
+    equal->right_child = equal->right_child->right_child;
+    
+    free(equal->right_child->parent);
+
+    equal->right_child->parent = equal;
+
+    if (!tokens->array[*iter]->node_type.bytes.is_operator || tokens->array[*iter]->value.str[0] != ';' || !equal->right_child)
+    {
+        SYNTAX_ERR;
+    }
+
+    if (is_const)
+    {
+        Node *const_node = (Node *)calloc(1, sizeof(Node));
+
+        const_node->node_type.bytes.is_keyword = IS_CONST;
+
+        const_node->value.str = (char *)calloc(6, sizeof(char));
+        strcpy(const_node->value.str, "const");
+
+        name_node->left_child = const_node;
+        const_node->parent = name_node;
+
+        return equal;
+    }
+
+    return equal;
+}
+
+static int skipEndl(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *node = tokens->array[*iter];
+
+    if (node->node_type.bytes.is_operator && node->value.str[0] == ';')
+    {
+        INC(iter);
+
+        return 0;
+    }
+
+    return -1;
 }

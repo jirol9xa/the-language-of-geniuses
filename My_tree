@@ -1,0 +1,1 @@
+((((statement((('foo')func((param('a'))param('b')))define(statement(('x')=('a')))))statement(('GLOBAL_VAR')=(4)))statement(('GLOBAL_VAR_2')=((28)*(4))))statement(((main)func)define(statement(('var')=(((3)*(8))+(1))))))statement((('bar')func)define(statement(('x')=('GLOBAL_VAR'))))

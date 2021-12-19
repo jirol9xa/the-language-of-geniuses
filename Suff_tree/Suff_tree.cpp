@@ -11,18 +11,6 @@
 extern const char *RESERVED_WORDS;
 extern const int   LETTERS_AMOUNT;
 
-extern int IS_IF;  
-extern int IS_WHILE;
-extern int IS_RETURN;
-extern int IS_CONST;
-extern int IS_MAIN;
-extern int IS_DEFINE;
-
-extern int IS_SIN    = 1 << 5;
-extern int IS_COS    = 1 << 6;
-extern int IS_LN     = 1 << 6 + 1;
-
-
 
 static void printSuffNode(Suff_node *node);
 static void printEdge(Edge *edge);
@@ -102,6 +90,8 @@ int suffTreeDtor(Suff_Tree *tree)
 
     suffNodeDtor(tree->root);
     free(tree);
+
+    return 0;
 }
 
 
