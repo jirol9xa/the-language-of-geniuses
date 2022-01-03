@@ -2,76 +2,56 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "LogsLib.h"
+#include "Logger.h"
 #include "Tree.h"
 #include "TextLib.h"
 #include "Suff_tree.h"
-#include "Recursive_descent.h"
 #include "Syntax.h"
 #include "Lexer.h"
+#include "Recursive_descent.h"
 
-static int constructTokens(Tokens_t *tokens, char *string);
-static int tokensCtor(Tokens_t *tokens);
-static int tokensDtor(Tokens_t *tokens);
-static int tokensResize(Tokens_t *tokens);
+
+static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree);
+static int tokensCtor     (Tokens_t *tokens);
+static int tokensDtor     (Tokens_t *tokens);
+static int tokensResize   (Tokens_t *tokens);
+
 static Node *number();
 static Node *identific();
 static Node *oper();
 
-static Node *GetGeneral(Tokens_t *tokens);
-static Node *GetArg(Tokens_t *tokens, int *iter);
-static Node *GetPriority(Tokens_t *tokens, int *iter);
-static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left); // for reading left or right value
-static Node *GetFunc(Tokens_t *tokens, int *iter);
-static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func);
-static Node *GetLogicOper(Tokens_t *tokens, int *iter);
-static Node *GetOperator(Tokens_t *tokens, int *iter);
-static Node *GetIf(Tokens_t *tokens, int *iter);
-static Node *GetWhile(Tokens_t *tokens, int *iter);
-static Node *readStatement(Tokens_t *tokens, int *iter); //for reading statement
-static Node *GetStatement(Tokens_t *tokens, int *iter);
+static Node *GetGeneral        (Tokens_t *tokens);
+static Node *GetArg            (Tokens_t *tokens, int *iter);
+static Node *GetPriority       (Tokens_t *tokens, int *iter);
+static Node *GetLRValue        (Tokens_t *tokens, int *iter, int is_left); // for reading left or right value
+static Node *GetFunc           (Tokens_t *tokens, int *iter);
+static Node *GetNumVar         (Tokens_t *tokens, int *iter, int is_func);
+static Node *GetLogicOper      (Tokens_t *tokens, int *iter);
+static Node *GetOperator       (Tokens_t *tokens, int *iter);
+static Node *GetIf             (Tokens_t *tokens, int *iter);
+static Node *GetWhile          (Tokens_t *tokens, int *iter);
+static Node *readStatement     (Tokens_t *tokens, int *iter); //for reading statement
+static Node *GetStatement      (Tokens_t *tokens, int *iter);
 static Node *GetExternStatement(Tokens_t *tokens, int *iter);
-static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const);
-static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global);
-static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round);
-static Node *GetAddSub(Tokens_t *tokens, int *iter);
-static Node *GetDefine(Tokens_t *tokens, int *iter);
+static Node *GetGlobal         (Tokens_t *tokens, int *iter, int is_const);
+static Node *GetArgs           (Tokens_t *tokens, int *iter, int for_global);
+static int   skipBrkts         (Tokens_t *tokens, int *iter, int is_open, int is_round);
+static Node *GetAddSub         (Tokens_t *tokens, int *iter);
+static Node *GetDefine         (Tokens_t *tokens, int *iter);
+
+
+#define FIRST_SYMB(iter) tokens->array[*iter]->value.str[0]
 
 #define INC(arg) ((*arg)++)
 
-#define PRINT_RESHETKA printf("#######################################\n");
-
-#define TYPE_BYTES(arg) tokens->array[*arg]->node_type.bytes
-
-#define PRINT_NODE(arg)                         \
-    {                                           \
-        if (arg->node_type.bytes.is_number)     \
-        {                                       \
-            printf("%lg\n", arg->value.number); \
-        }                                       \
-        else                                    \
-        {                                       \
-            printf("%s\n", arg->value.str);     \
-        }                                       \
-    }
-
-#define SYNTAX_ERR                 \
-    {                              \
-        PRINT_RESHETKA;            \
-        printf("Syntax err in\n"); \
-        PRINT_RESHETKA;            \
-        PRINT_LINE;                \
-        SyntaxError();             \
-    }
-
-#define FIRST_SYMB(iter) tokens->array[*iter]->value.str[0]
 
 extern const char *RESERVED_WORDS;
 extern const int LETTERS_AMOUNT;
 
 char *STRING = nullptr;
 
-int constructTree(Tree *tree, char *string)
+
+int constructTree(Tree *tree, char *string, Suff_Tree *suff_tree)
 {
     assert(string);
     assert(tree);
@@ -84,29 +64,13 @@ int constructTree(Tree *tree, char *string)
     Tokens_t tokens = {};
     tokensCtor(&tokens);
 
-    constructTokens(&tokens, string);
+    constructTokens(&tokens, string, suff_tree);
 
     tree->root = GetGeneral(&tokens);
 
     treeDump(tree);
 
-    PRINT_LINE;
-    //for (int i = 0; i < tokens.size; i++)
-    //{
-    //    PRINT_LINE;
-    //    printf("tkn = %p\n", tokens.array[i]);
-    //    if (!tokens.array[i]->node_type.bytes.is_number)
-    //    {
-    //        PRINT_LINE;
-    //        printf("str = %s\n", tokens.array[i]->value.str);
-    //        PRINT_LINE;
-    //        free(tokens.array[i]->value.str);
-    //    }
-    //    PRINT_LINE;
-    //    free(tokens.array[i]);
-    //}
-    tokensDtor(&tokens); // delete this!!!
-
+    tokensDtor(&tokens);
     return 0;
 }
 
@@ -116,7 +80,7 @@ int constructTree(Tree *tree, char *string)
     \param  [char *]string Array with code
     \return 0 if all right
 */
-static int constructTokens(Tokens_t *tokens, char *string)
+static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
 {
     assert(tokens);
     assert(string);
@@ -138,7 +102,6 @@ static int constructTokens(Tokens_t *tokens, char *string)
             }
             else
             {
-                printf("!!! ERROR Can't allocate memory !!!\n");
                 return -1;
             }
         }
@@ -160,12 +123,12 @@ static int constructTokens(Tokens_t *tokens, char *string)
         }
     }
 
-    PRINT_LINE;
+    
     // adding a key character
 
     if (is_ok)
     {
-        PRINT_LINE;
+        
         if (tokens->size + 1 > tokens->capacity)
         {
             tokens->capacity *= 2;
@@ -176,12 +139,11 @@ static int constructTokens(Tokens_t *tokens, char *string)
             }
             else
             {
-                printf("!!! ERROR Can't allocate memory !!!\n");
                 return -1;
             }
         }
 
-        lexAnal(tokens);
+        lexAnal(tokens, suff_tree);
 
         Node **last_node = &(tokens->array[tokens->size]);
 
@@ -192,7 +154,7 @@ static int constructTokens(Tokens_t *tokens, char *string)
         (*last_node)->value.str[0] = '$';
         (*last_node)->value.str[1] = '\0';
 
-        PRINT_LINE;
+        
 
         PRINT_NODE((*last_node));
 
@@ -249,66 +211,21 @@ static Node *identific()
 
     sscanf(STRING, "%[a-zA-Z0-9_-]", buffer);
 
-    printf("ident = %s\n", buffer);
-
     STRING += strlen(buffer);
 
     STRING += skipSpace(STRING);
 
-    //for (int i = 0; i < 19 && *STRING >= 'a' && *STRING <= 'z'; i++)
-    //{
-    //    buffer[i] = *STRING++;
-    //}
-
-    //if (strlen(buffer) == 1)
-    //{
-    //    node->value.str = (char *) calloc(2, sizeof(char));
-    //    node->node_type.bytes.is_variable = 1;
-    //    node->value.str[0] = buffer[0];
-    //    node->value.str[1] = '\0';
-    //
-    //    return node;
-    //}
-
-    //node->node_type.bytes.is_func = 1;
     node->value.str = (char *)calloc(strlen(buffer) + 1, sizeof(char));
     node->node_type.bytes.is_variable = 1;
     strcpy(node->value.str, buffer);
 
     return node;
-
-    //if (strstr("sincosln", node->value.str))
-    //{
-    //    switch (node->value.str[0])
-    //    {
-    //        case 's':
-    //            if (node->value.str[1] == 'i')
-    //            {
-    //                node->node_type.bytes.is_func = IS_SIN;
-    //                return node;
-    //            }
-    //            //node->node_type.bytes.is_func = IS_SCAN;
-    //            return node;
-    //        case 'c':
-    //            node->node_type.bytes.is_func = IS_COS;
-    //            return node;
-    //        case 'l':
-    //            node->node_type.bytes.is_func = IS_LN;
-    //            return node;
-    //        case 'p':
-    //            //node->node_type.bytes.is_func = IS_PRINT;
-    //            return node;
-    //    }
-    //}
-
-    //SYNTAX_ERR;
-    return nullptr;
 }
 
 static Node *oper()
 {
-    Node *node = (Node *)calloc(1, sizeof(Node));
-    node->value.str = (char *)calloc(3, sizeof(char));
+    Node *node      = (Node *) calloc(1, sizeof(Node));
+    node->value.str = (char *) calloc(3, sizeof(char));
 
     node->value.str[0] = *STRING++;
     node->value.str[1] = '\0';
@@ -321,21 +238,35 @@ static Node *oper()
             node->value.str[2] = '\0';
         }
     }
-
-    PRINT_LINE;
-    printf("value = %s\n", node->value.str);
-
+    else if (node->value.str[0] == '&')
+    {
+        if (*STRING == '&')
+        {
+            node->value.str[1] = *STRING++;
+            node->value.str[2] = '\0';  
+        }
+    }
+    else if (node->value.str[0] == '|')
+    {
+        if (*STRING == '|')
+        {
+            node->value.str[1] = *STRING++;
+            node->value.str[2] = '\0';
+        }
+    }
+    
     STRING += skipSpace(STRING);
     node->node_type.bytes.is_operator = 1;
 
-    if (!strchr("+-/*^()$>=<{};,", node->value.str[0]))
+    if (!strchr("+-/*^()$>=<{};,&|", node->value.str[0]))
     {
-        PRINT_LINE;
+        
         SYNTAX_ERR;
     }
 
     return node;
 }
+
 
 int SyntaxError()
 {
@@ -359,10 +290,12 @@ static Node *GetGeneral(Tokens_t *tokens)
     {
         SYNTAX_ERR;
     }
-
+    
+    free(tokens->array[iter - 1]->value.str);
     free(tokens->array[iter - 1]);
     return root;
 }
+
 
 /*!
     \brief  Function for reading external statement
@@ -380,35 +313,28 @@ static Node *GetExternStatement(Tokens_t *tokens, int *iter)
     Node *ext_stmnt = nullptr;
     Node *stmnt = nullptr;
 
-    PRINT_LINE;
+    
     while (!(tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == '$'))
     {
-        PRINT_LINE;
-        PRINT_NODE(tokens->array[*iter]);
-
-        stmnt = (Node *)calloc(1, sizeof(Node));
-        PRINT_LINE;
+        stmnt = (Node *) calloc(1, sizeof(Node));
 
         stmnt->node_type.bytes.is_serv_node = 1;
+        stmnt->node_type.bytes.is_keyword   = IS_STATEMENT;
 
-        stmnt->value.str = (char *)calloc(10, sizeof(char));
+        stmnt->value.str = (char *) calloc(10, sizeof(char));
         strcpy(stmnt->value.str, "statement");
-        PRINT_LINE;
 
         Node *node = tokens->array[*iter];
 
-        PRINT_LINE;
-
         int is_const = (node->node_type.bytes.is_keyword == IS_CONST);
-
-        PRINT_LINE;
 
         if (is_const || node->node_type.bytes.is_variable)
         {
             //INC(iter); skip const
-            PRINT_LINE;
             Node *equal = GetGlobal(tokens, iter, is_const);
 
+            free(tokens->array[*iter]->value.str);
+            free(tokens->array[*iter]);
             INC(iter); // skipping ;
 
             stmnt->right_child = equal;
@@ -416,22 +342,13 @@ static Node *GetExternStatement(Tokens_t *tokens, int *iter)
         }
         else if (node->node_type.bytes.is_keyword = IS_DEFINE)
         {
-            PRINT_LINE;
-            PRINT_NODE(node);
-
             stmnt->right_child = GetDefine(tokens, iter);
             stmnt->right_child->parent = stmnt;
-
-            PRINT_LINE;
-
-            PRINT_NODE(tokens->array[*iter]);
 
             if (skipBrkts(tokens, iter, 0, 0))
             {
                 SYNTAX_ERR;
             }
-
-            PRINT_NODE(tokens->array[*iter]);
         }
         else
         {
@@ -445,6 +362,7 @@ static Node *GetExternStatement(Tokens_t *tokens, int *iter)
     return ext_stmnt;
 }
 
+
 /*!
     \brief Function for reading statement inside the function
 */
@@ -456,20 +374,14 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
     Node *stmnt = readStatement(tokens, iter);
     Node *value = nullptr;
 
-#define KEY_NUMBER tokens->array[*iter]->node_type.bytes.is_keyword
+    #define KEY_NUMBER tokens->array[*iter]->node_type.bytes.is_keyword
 
     while (tokens->array[*iter]->value.str[0] != '}' && (KEY_NUMBER != IS_WHILE) && (KEY_NUMBER != IS_IF))
     {
-        PRINT_RESHETKA;
-        PRINT_RESHETKA;
-        PRINT_RESHETKA;
-
-        PRINT_NODE(tokens->array[*iter]);
-
         value = readStatement(tokens, iter);
 
         value->left_child = stmnt;
-        stmnt->parent = value;
+        stmnt->parent     = value;
 
         stmnt = value;
         //INC(iter);
@@ -478,6 +390,7 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
     return stmnt;
 }
 
+
 static Node *readStatement(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
@@ -485,9 +398,6 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
 
     skipBrkts(tokens, iter, 1, 0);
 
-    //if (tokens->size = *iter + 1)
-
-    //Node *node = tokens->array[*iter];
     Node *stmnt = (Node *)calloc(1, sizeof(Node));
 
     stmnt->node_type.bytes.is_serv_node = 1;
@@ -497,18 +407,32 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
 
     Node *stmnt_val = nullptr;
 
-    PRINT_NODE(tokens->array[*iter]);
+    auto token_type = tokens->array[*iter]->node_type.bytes;
 
-    if (!TYPE_BYTES(iter).is_func && !TYPE_BYTES(iter).is_variable)
+    if (!token_type.is_func && !token_type.is_variable && token_type.is_keyword != IS_RETURN)
     {
         SYNTAX_ERR;
     }
 
-    if (TYPE_BYTES(iter).is_func)
+    if (token_type.is_keyword == IS_RETURN)
     {
-        PRINT_LINE;
-        PRINT_NODE(tokens->array[*iter]);
-        PRINT_LINE;
+        stmnt_val = tokens->array[*iter];
+        INC(iter);
+
+        stmnt_val->right_child = GetAddSub(tokens, iter);
+        
+        stmnt_val->parent  = stmnt;
+        stmnt->right_child = stmnt_val;
+
+        free(tokens->array[*iter]->value.str);
+        free(tokens->array[*iter]);
+        INC(iter);
+
+        return stmnt;
+    }
+
+    if (token_type.is_func)
+    {
         stmnt_val = GetFunc(tokens, iter);
 
         if (!TYPE_BYTES(iter).is_operator && tokens->array[*iter]->value.str[0] != ';')
@@ -516,7 +440,10 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
             SYNTAX_ERR;
         }
 
+        free(tokens->array[*iter]->value.str);
+        free(tokens->array[*iter]);
         INC(iter);
+
         return stmnt_val;
     }
 
@@ -530,16 +457,15 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
 
     (*iter) += 2;
 
-    PRINT_LINE;
     stmnt_val->right_child = GetAddSub(tokens, iter);
-
-    //INC(iter);
 
     if (!TYPE_BYTES(iter).is_operator || tokens->array[*iter]->value.str[0] != ';')
     {
         SYNTAX_ERR;
     }
 
+    free(tokens->array[*iter]->value.str);
+    free(tokens->array[*iter]);
     INC(iter);
 
     stmnt->right_child = stmnt_val;
@@ -651,8 +577,6 @@ static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func)
 
     Node *node = tokens->array[*iter];
 
-    PRINT_NODE(tokens->array[*iter]);
-
     // mb SitaxError is too much
 
     if (node->node_type.bytes.is_number || node->node_type.bytes.is_variable)
@@ -663,15 +587,12 @@ static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func)
     }
     if (is_func && node->node_type.bytes.is_func)
     {
-        PRINT_LINE;
-
         return GetFunc(tokens, iter);
     }
 
-    printf("Node = %p\n", node);
-
     return nullptr;
 }
+
 
 /*!
     \brief Function for getting function (generate call)
@@ -680,6 +601,8 @@ static Node *GetFunc(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
+
+    
 
     Node *call_node = (Node *)calloc(1, sizeof(Node));
     Node *func_node = (Node *)calloc(1, sizeof(Node));
@@ -693,13 +616,15 @@ static Node *GetFunc(Tokens_t *tokens, int *iter)
     strcpy(call_node->value.str, "call");
     strcpy(func_node->value.str, "func");
 
-    func_node->left_child = tokens->array[(*iter)++];
+    func_node->left_child         = tokens->array[(*iter)++];
     func_node->left_child->parent = func_node;
 
-    PRINT_NODE(tokens->array[*iter]);
-
     func_node->right_child = GetArgs(tokens, iter, 0);
-    func_node->right_child->parent = func_node;
+    
+    if (func_node->right_child)
+    {
+        func_node->right_child->parent = func_node;
+    }
 
     call_node->right_child = func_node;
     func_node->parent      = call_node;
@@ -753,6 +678,7 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
             {
                 is_skipped++;
 
+                free(tokens->array[*iter]->value.str);
                 free(tokens->array[*iter]); //mb segfold
                 INC(iter);
             }
@@ -763,6 +689,7 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
             {
                 is_skipped++;
 
+                free(tokens->array[*iter]->value.str);
                 free(tokens->array[*iter]); //mb segfold
                 INC(iter);
             }
@@ -777,6 +704,7 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
             {
                 is_skipped++;
 
+                free(tokens->array[*iter]->value.str);
                 free(tokens->array[*iter]); //mb segfold
                 INC(iter);
             }
@@ -785,20 +713,18 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
         {
             while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == '}')
             {
-                PRINT_LINE;
                 is_skipped++;
 
-                free(tokens->array[*iter]); //mb segfold
+                free(tokens->array[*iter]->value.str); //mb segfold
+                free(tokens->array[*iter]);
                 INC(iter);
-                PRINT_LINE;
-                PRINT_NODE(tokens->array[*iter]);
-                PRINT_LINE;
             }
         }
     }
 
     return !is_skipped;
 }
+
 
 static Node *GetMulDiv(Tokens_t *tokens, int *iter)
 {
@@ -809,7 +735,7 @@ static Node *GetMulDiv(Tokens_t *tokens, int *iter)
 
     Node *value = GetPriority(tokens, iter);
 
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/&|", tokens->array[*iter]->value.str[0]))
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("*^/><==", tokens->array[*iter]->value.str[0]))
     {
         oper = tokens->array[*iter];
         oper->left_child = value;
@@ -833,15 +759,18 @@ static Node *GetPriority(Tokens_t *tokens, int *iter)
 
     if (tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == '(')
     {
+        free(tokens->array[*iter]->value.str);
+        free(tokens->array[*iter]);
         INC(iter);
-        free(tokens->array[*iter - 1]);
 
         Node *value = GetAddSub(tokens, iter);
 
         if (tokens->array[*iter]->node_type.bytes.is_operator && tokens->array[*iter]->value.str[0] == ')')
         {
+            free(tokens->array[*iter ]->value.str);
+            free(tokens->array[*iter]);
             INC(iter);
-            free(tokens->array[*iter - 1]);
+
             return value;
         }
 
@@ -863,16 +792,10 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
     assert(tokens);
     assert(iter);
 
-    PRINT_LINE;
-
     if (!for_global && skipBrkts(tokens, iter, 1, 1))
     {
-        printf("Node = ");
-        PRINT_NODE(tokens->array[*iter]);
         SYNTAX_ERR;
     }
-
-    PRINT_NODE(tokens->array[*iter]);
 
     // checking for a function without arguments
     if (!skipBrkts(tokens, iter, 0, 1))
@@ -880,18 +803,18 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
         return nullptr;
     }
 
-    Node *args = GetAddSub(tokens, iter);
-    Node *param_node = (Node *)calloc(1, sizeof(Node));
+    Node *args       = GetAddSub(tokens, iter);
+    Node *param_node = (Node *) calloc(1, sizeof(Node));
 
     param_node->node_type.bytes.is_serv_node = 1;
 
-    param_node->value.str = (char *)calloc(6, sizeof(char));
+    param_node->value.str = (char *) calloc(6, sizeof(char));
     strcpy(param_node->value.str, "param");
 
     param_node->right_child = args;
     args->parent = param_node;
 
-    while ((!TYPE_BYTES(iter).is_operator || FIRST_SYMB(iter) != ')') && FIRST_SYMB(iter) != ';')
+    while (TYPE_BYTES(iter).is_number || (!TYPE_BYTES(iter).is_operator || FIRST_SYMB(iter) != ')') && FIRST_SYMB(iter) != ';')
     {
         if (!TYPE_BYTES(iter).is_number && FIRST_SYMB(iter) == ',')
         {
@@ -900,46 +823,55 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
 
             INC(iter);
         }
-        PRINT_LINE;
+        
 
         Node *next_arg = GetAddSub(tokens, iter);
 
+        
+
         if (!next_arg)
         {
+            
             //next_arg = tokens->array[*iter];
             //INC(iter);
             return param_node;
-            ;
         }
 
-        Node *new_param_node = (Node *)calloc(1, sizeof(Node));
+        Node *new_param_node = (Node *) calloc(1, sizeof(Node));
 
         new_param_node->node_type.bytes.is_serv_node = 1;
 
-        new_param_node->value.str = (char *)calloc(6, sizeof(char));
+        new_param_node->value.str = (char *) calloc(6, sizeof(char));
         strcpy(new_param_node->value.str, "param");
 
         new_param_node->right_child = next_arg;
-        next_arg->parent = new_param_node;
+        next_arg->parent            = new_param_node;
 
-        new_param_node->left_child = param_node;
-        param_node->parent = new_param_node;
+        new_param_node->left_child  = param_node;
+        param_node->parent          = new_param_node;
 
         param_node = new_param_node;
 
+        
+
         if (TYPE_BYTES(iter).is_operator && tokens->array[*iter]->value.str[0] == ',')
         {
+            
             free(tokens->array[*iter]->value.str);
             free(tokens->array[*iter]);
-
+            
             INC(iter);
         }
     }
+
+    
 
     if (TYPE_BYTES(iter).is_operator && FIRST_SYMB(iter) == ')')
     {
         INC(iter);
     }
+
+    
 
     return param_node;
     //return tokens->array[*iter - 1];
@@ -993,7 +925,7 @@ static Node *GetDefine(Tokens_t *tokens, int *iter)
 
     PRINT_NODE(tokens->array[*iter]);
     func_node->left_child = tokens->array[(*iter)++]; // skip func name
-    PRINT_LINE;
+    
     PRINT_NODE(tokens->array[*iter]);
 
     func_node->right_child = GetArgs(tokens, iter, 0);
@@ -1001,7 +933,7 @@ static Node *GetDefine(Tokens_t *tokens, int *iter)
     def_node->left_child = func_node;
     def_node->right_child = GetStatement(tokens, iter);
 
-    PRINT_LINE;
+    
 
     return def_node;
 }
@@ -1014,7 +946,7 @@ static Node *GetAddSub(Tokens_t *tokens, int *iter)
     Node *oper = nullptr;
     Node *value = GetMulDiv(tokens, iter);
 
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-<>=", tokens->array[*iter]->value.str[0]))
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-&&||=", tokens->array[*iter]->value.str[0]))
     {
         oper = tokens->array[*iter];
         oper->left_child = value;
@@ -1041,6 +973,7 @@ static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
 
     if (!equal->node_type.bytes.is_operator || equal->value.str[0] != '=')
     {
+        PRINT_NODE(equal);
         SYNTAX_ERR;
     }
 

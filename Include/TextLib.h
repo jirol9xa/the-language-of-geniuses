@@ -44,6 +44,8 @@
     int  finish_text(Text* Onegin);
     void eatInputBuff();
     int GetLine(char *string);
+    char *readBuff(FILE *sourse);
+
 
 
 #endif

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "LogsLib.h"
+#include "Logger.h"
 #include "Tree.h"
 #include <assert.h>
 
@@ -19,10 +19,9 @@ Node *nodeCtor(Node *parent, Node *new_node, int is_left)
     new_node->left_child  = nullptr;
     new_node->right_child = nullptr;
 
-    if (is_left) 
-        parent->left_child  = new_node;
-    else         
-        parent->right_child = new_node;
+    if (is_left) parent->left_child  = new_node;
+    else         parent->right_child = new_node;
+
     return new_node; 
 }
 
@@ -34,16 +33,17 @@ int treeCtor(Tree *tree)
     tree->root = (Node *) calloc(1, sizeof(Node));
 
     tree->size = 1;
-    tree->status.empty_tree = 1;;
+    tree->status.empty_tree = 1;
     return 0;
 }
 
 
-void treeDump(Tree *tree)
+int treeDump(Tree *tree)
 {
     assert(tree);
+    IS_DTRCT(tree);
      
-    openLogs("LOGS/logs.dot");  
+    openLogs("../LOGS/logs.dot");  
     writeLogs("digraph G{\n");
 
     printNode(tree->root);
@@ -52,9 +52,12 @@ void treeDump(Tree *tree)
 
     closeLogs();
 
-    system("dot -T png LOGS/logs.dot -o pic.png");
+    system("dot -T png ../LOGS/logs.dot -o pic.png");
     system("eog pic.png");
+
+    return 0;
 }
+
 
 void printNode(Node *node)
 {
@@ -95,7 +98,7 @@ int treeDtor(Tree *tree)
 }
 
 
-int nodeDtor (Node *node)
+int nodeDtor(Node *node)
 {
     assert(node);
 
@@ -195,17 +198,18 @@ Node *searchElem(Node *node, type_t elem)
 }
 */
 
+
 int printNodeValue(Node *node)
 {
     assert(node);
 
     if (node->node_type.bytes.is_number)
     {
-        writeLogs("%lg ", node->value.number);
+        writeLogs("%lg", node->value.number);
     }
     else
     {
-        writeLogs("%s ", node->value.str);
+        writeLogs("%s", node->value.str);
     }
     //else
     //{

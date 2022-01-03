@@ -10,5 +10,5 @@
     };
 
 
-    int lexAnal(Tokens_t *tokens);
+    int lexAnal(Tokens_t *tokens, Suff_Tree *suff_tree);
 #endif

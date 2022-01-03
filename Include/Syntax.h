@@ -25,10 +25,29 @@
         IS_DEFINE    = (1 << 2) + (1 << 1),
         IS_STATEMENT = (1 << 2) + (1 << 1) + 1,
         IS_FUNCTION  = (1 << 3),
+        IS_CALL      = (1 << 3) + 1,
+        IS_DECISION  = (1 << 3) + (1 << 1),
+        IS_PARAM     = (1 << 3) + (1 << 1) + 1,
 
-        IS_SIN       = (1 << 3) + 1,
-        IS_COS       = (1 << 3) + (1 << 1),
-        IS_LN        = (1 << 3) + (1 << 1) + 1,     
+        IS_SIN       = (1 << 3) + (1 << 1),
+        IS_COS       = (1 << 3) + (1 << 1) + 1,
+        IS_LN        = (1 << 3) + (1 << 2),     
     };
+
+
+    int SyntaxError  ();
+
+
+    #define SYNTAX_ERR             \
+    {                              \
+        PRINT_RESHETKA;            \
+        printf("Syntax err in\n"); \
+        PRINT_RESHETKA;            \
+        PRINT_LINE;                \
+        SyntaxError();             \
+    }
+
+    #define PRINT_RESHETKA printf("#######################################\n");
+
 
 #endif

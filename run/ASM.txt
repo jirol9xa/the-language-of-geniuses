@@ -1,0 +1,11 @@
+PUSH 20
+POP bx
+JMP :main
+:foo
+PUSH 3
+PUSH 4
+ADD
+POP cx
+:RET
+:main
+HLT

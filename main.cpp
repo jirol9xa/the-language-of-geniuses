@@ -3,12 +3,10 @@
 #include <string.h>
 #include "Syntax.h"
 #include "Tree.h"
-#include "LogsLib.h"
+#include "Logger.h"
 #include "Language.h"
 #include "Suff_tree.h"
 
-extern int   LETTERS_AMOUNT;
-extern char *RESERVED_WORDS;
 
 int main(const int argc, const char **argv)
 {
@@ -21,10 +19,12 @@ int main(const int argc, const char **argv)
     FILE *sourse = fopen(argv[1], "r");
 
     Tree tree = {};
-    treeCtor(&tree);
 
     readCode(sourse, &tree);
     
+    fclose(sourse);
+    
     treeDtor(&tree);
+    //free(tree.root);
     return 0;
 }

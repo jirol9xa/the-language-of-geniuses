@@ -2,7 +2,7 @@
     #define THEE_H
 
 
-    typedef char *type_t;
+    //typedef char *type_t;
 
     
     union Value
@@ -11,26 +11,28 @@
         char  *str;
     };
 
+    union Node_type
+    {
+        struct 
+        {
+            unsigned is_keyword   : 7;
+            unsigned is_operator  : 1;
+            unsigned is_number    : 1;
+            unsigned is_variable  : 1;
+            unsigned is_func      : 3;
+            unsigned is_serv_node : 3;
+        } bytes;
+
+        unsigned int number;
+    };
+
     struct Node 
     {
-        Value value;
-        union 
-        {
-            struct 
-            {
-                unsigned is_keyword   : 7;
-                unsigned is_operator  : 1;
-                unsigned is_number    : 1;
-                unsigned is_variable  : 1;
-                unsigned is_func      : 3;
-                unsigned is_serv_node : 3;
-            } bytes;
-
-            unsigned int number;
-        } node_type;
-        Node *left_child;
-        Node *right_child;
-        Node *parent;
+        Value     value;
+        Node_type node_type;
+        Node     *left_child;
+        Node     *right_child;
+        Node     *parent;
     };
 
     struct Tree
@@ -83,7 +85,7 @@
         \return 0 в случае успеха, -1 в противном
                 случае
     */
-    void  treeDump (Tree *tree);
+    int   treeDump (Tree *tree);
     /*!
         \brief  Функия распечатки узла
         \param  [Node *]node Указатель на узел
@@ -140,5 +142,19 @@
             return -1;                                                     \
         }                                                                  \
     }                                                                      
+
+    #define TYPE_BYTES(arg) tokens->array[*arg]->node_type.bytes
+
+    #define PRINT_NODE(arg)                     \
+    {                                           \
+        if (arg->node_type.bytes.is_number)     \
+        {                                       \
+            printf("%lg\n", arg->value.number); \
+        }                                       \
+        else                                    \
+        {                                       \
+            printf("%s\n", arg->value.str);     \
+        }                                       \
+    }
 
 #endif

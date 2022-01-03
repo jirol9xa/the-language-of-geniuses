@@ -30,8 +30,7 @@
     // hello vovqa, i love you so fuckin much
     // hello vovqa, i love you so fuckin much
 
-    int constructTree(Tree *tree, char *string);
-    int SyntaxError  ();
+    int constructTree(Tree *tree, char *string, Suff_Tree *suff_tree);
 
 
 #endif

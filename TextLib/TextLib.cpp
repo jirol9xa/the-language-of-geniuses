@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "TextLib.h"
 
 int constructText(FILE *sourse, Text *text)
@@ -161,3 +162,18 @@ int GetLine(char *string)
     return i;
 }
 
+
+char *readBuff(FILE *sourse)
+{
+    assert(sourse);
+
+    long int file_length = 0;
+    fileLength(&file_length, sourse);
+
+    char *text = (char *) calloc(file_length + 1, sizeof(char));
+    long int num_symb = fread(text, sizeof(char), file_length, sourse);
+
+    text[num_symb] = '\0';
+
+    return text;
+}
