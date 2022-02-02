@@ -17,12 +17,8 @@ int lexAnal(Tokens_t *tokens, Suff_Tree *suff_tree)
     assert(tokens);
     assert(suff_tree);
 
-    //Suff_Tree *suff_tree = suffTreeCtor();
-
     int insd_rnd_brack = 0;
     int insd_fig_brack = 0;
-
-    
 
     for (int i = 0; i < tokens->size; i++)
     {
@@ -49,13 +45,10 @@ int lexAnal(Tokens_t *tokens, Suff_Tree *suff_tree)
             }
         }
     }
-    
     if (insd_fig_brack || insd_rnd_brack)
     {
         SyntaxError();
     }
-    
-    
 
     //for (int i = 0; i < tokens->size; i++)
     //{
@@ -67,8 +60,6 @@ int lexAnal(Tokens_t *tokens, Suff_Tree *suff_tree)
     //
     //    printf("str = %s, status = %d\n", tokens->array[i]->value.str, tokens->array[i]->node_type.number);
     //}
-
-    
 
     return 0;
 }

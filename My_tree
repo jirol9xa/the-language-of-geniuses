@@ -1,1 +1,0 @@
-((statement((('foo')func)define((statement(('x')=(3)))statement(return((4)+('x'))))))statement(((main)func)define(statement(('z')=(((('x')<=('y'))&&(('b')==('a')))||(('r')==('e')))))))

@@ -25,6 +25,5 @@ int main(const int argc, const char **argv)
     fclose(sourse);
     
     treeDtor(&tree);
-    //free(tree.root);
     return 0;
 }

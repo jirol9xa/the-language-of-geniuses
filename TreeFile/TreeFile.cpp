@@ -11,7 +11,6 @@
 #include "TextLib.h"
 
 
-
 static int writeNode     (Node *node);
 static int writeNodeValue(Node *node);
 static int readArg(Node *node, char *text, Suff_Tree *suff_tree);
@@ -51,7 +50,6 @@ static int writeNode(Node *node)
     }
 
     writeLogs(")");
-
 
     return 0;
 }
@@ -163,10 +161,6 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
         i++;
 
         sscanf(text + i, "%m[A-Za-z-_0-9]%n", &(node->value.str), &size);
-        
-        printf("node value = %s\n", node->value.str);
-
-        //int status = isKeyword(node->value.str, suff_tree);
 
         int prnt_stat = 0;
 
@@ -183,13 +177,9 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
 
     sscanf(text + i, "%m[a-zA-Z_*=<>&|+-0-9]%n", &(node->value.str), &size);
 
-    printf("node value = %s, length = %d\n", node->value.str, size);
-
     int status = isKeyword(node->value.str, suff_tree);
 
     node->node_type.number = status + !status * (1 << 7);
-
-    printf("next = %s\n", node->value.str);
 
     return i + size;
 }

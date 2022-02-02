@@ -74,6 +74,7 @@ int constructTree(Tree *tree, char *string, Suff_Tree *suff_tree)
     return 0;
 }
 
+
 /*!
     \brief  Func of lex anal))))
     \param  [Tokens_t *]tokens Pointer to tokens struct
@@ -86,7 +87,7 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
     assert(string);
 
     STRING = string;
-    int is_ok = 0; // is_ok = 0
+    int is_ok = 0;
 
     while (*STRING != '$')
     {
@@ -123,7 +124,6 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
         }
     }
 
-    
     // adding a key character
 
     if (is_ok)
@@ -154,10 +154,6 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
         (*last_node)->value.str[0] = '$';
         (*last_node)->value.str[1] = '\0';
 
-        
-
-        PRINT_NODE((*last_node));
-
         tokens->size++;
 
         return 0;
@@ -166,6 +162,7 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
     SYNTAX_ERR;
     return -1;
 }
+
 
 static int tokensCtor(Tokens_t *tokens)
 {
@@ -177,6 +174,7 @@ static int tokensCtor(Tokens_t *tokens)
     return 0;
 }
 
+
 static int tokensDtor(Tokens_t *tokens)
 {
     assert(tokens);
@@ -184,6 +182,7 @@ static int tokensDtor(Tokens_t *tokens)
     free(tokens->array);
     return 0;
 }
+
 
 static Node *number()
 {
@@ -204,6 +203,7 @@ static Node *number()
     return node;
 }
 
+
 static Node *identific()
 {
     Node *node = (Node *)calloc(1, sizeof(Node));
@@ -221,6 +221,7 @@ static Node *identific()
 
     return node;
 }
+
 
 static Node *oper()
 {
@@ -273,6 +274,7 @@ int SyntaxError()
     printf("!!! ERROR SyntaxError !!!\n");
     exit(1);
 }
+
 
 static Node *GetGeneral(Tokens_t *tokens)
 {
@@ -474,6 +476,7 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
     return stmnt;
 }
 
+
 /*!
     \brief Function for writing "while" in the Tree
 */
@@ -490,6 +493,7 @@ static Node *GetWhile(Tokens_t *tokens, int *iter)
     return while_;
 }
 
+
 /*!
     \brief Function for writing "If" in the tree
 */
@@ -502,6 +506,7 @@ static Node *GetIf(Tokens_t *tokens, int *iter)
 
     if_->left_child = GetOperator(tokens, iter);
 }
+
 
 // Use GetArg or GerLRValue
 // func is too big
@@ -541,6 +546,7 @@ static Node *GetOperator(Tokens_t *tokens, int *iter)
     return oper;
 }
 
+
 /*!
     \brief Fucntion for complex logical operations
 */
@@ -566,6 +572,7 @@ static Node *GetLogicOper(Tokens_t *tokens, int *iter)
 
     return l_value;
 }
+
 
 /*!
     \brief Function for geetting number or variable
@@ -632,6 +639,7 @@ static Node *GetFunc(Tokens_t *tokens, int *iter)
     return call_node;
 }
 
+
 /*!
     \brief Fucntion for getting LRValue
 */
@@ -659,6 +667,7 @@ static Node *GetLRValue(Tokens_t *tokens, int *iter, int is_left) // for reading
 
     return node;
 }
+
 
 /*!
     \brief Function for skipping brackets
@@ -695,7 +704,6 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
             }
         }
     }
-
     if (!is_open)
     {
         if (is_round)
@@ -749,6 +757,7 @@ static Node *GetMulDiv(Tokens_t *tokens, int *iter)
     return value;
 }
 
+
 /*!
     \brief Fucntion for getting ()
 */
@@ -783,6 +792,7 @@ static Node *GetPriority(Tokens_t *tokens, int *iter)
 
     return nullptr;
 }
+
 
 /*!
     \brief Function for getting args in func
@@ -824,14 +834,10 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
             INC(iter);
         }
         
-
         Node *next_arg = GetAddSub(tokens, iter);
-
-        
 
         if (!next_arg)
         {
-            
             //next_arg = tokens->array[*iter];
             //INC(iter);
             return param_node;
@@ -852,11 +858,8 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
 
         param_node = new_param_node;
 
-        
-
         if (TYPE_BYTES(iter).is_operator && tokens->array[*iter]->value.str[0] == ',')
-        {
-            
+        {  
             free(tokens->array[*iter]->value.str);
             free(tokens->array[*iter]);
             
@@ -864,14 +867,12 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
         }
     }
 
-    
-
     if (TYPE_BYTES(iter).is_operator && FIRST_SYMB(iter) == ')')
     {
+        free(tokens->array[*iter]->value.str);
+        free(tokens->array[*iter]);
         INC(iter);
     }
-
-    
 
     return param_node;
     //return tokens->array[*iter - 1];
@@ -882,6 +883,7 @@ static Node *GetArgs(Tokens_t *tokens, int *iter, int for_global)
     //    return func;
     //}
 }
+
 
 static Node *GetBlock(Tokens_t *tokens, int *iter)
 {
@@ -901,6 +903,7 @@ static Node *GetBlock(Tokens_t *tokens, int *iter)
 
     return node;
 }
+
 
 /*!
     \brief Function for getting definition of func
@@ -923,20 +926,16 @@ static Node *GetDefine(Tokens_t *tokens, int *iter)
     func_node->value.str = (char *)calloc(5, sizeof(char));
     strcpy(func_node->value.str, "func");
 
-    PRINT_NODE(tokens->array[*iter]);
     func_node->left_child = tokens->array[(*iter)++]; // skip func name
-    
-    PRINT_NODE(tokens->array[*iter]);
 
     func_node->right_child = GetArgs(tokens, iter, 0);
 
     def_node->left_child = func_node;
     def_node->right_child = GetStatement(tokens, iter);
 
-    
-
     return def_node;
 }
+
 
 static Node *GetAddSub(Tokens_t *tokens, int *iter)
 {
@@ -960,6 +959,7 @@ static Node *GetAddSub(Tokens_t *tokens, int *iter)
     return value;
 }
 
+
 static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
 {
     assert(tokens);
@@ -973,7 +973,6 @@ static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
 
     if (!equal->node_type.bytes.is_operator || equal->value.str[0] != '=')
     {
-        PRINT_NODE(equal);
         SYNTAX_ERR;
     }
 
@@ -981,7 +980,6 @@ static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
     name_node->parent = equal;
 
     equal->right_child = GetArgs(tokens, iter, 1); //returned with param_node
-    
 
     if (!equal->right_child)
     {
@@ -1016,6 +1014,7 @@ static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
 
     return equal;
 }
+
 
 static int skipEndl(Tokens_t *tokens, int *iter)
 {

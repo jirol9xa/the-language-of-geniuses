@@ -1,7 +1,7 @@
 CC 			 = g++
 I_FLAG 		 = -I ../Include/
 DEBUG_FLAGS  = -fsanitize=address,leak,undefined -Wall -g
-ALL_OBJECTS  = main.o Tree.o TextLib.o Recursive_descent.o Suff_tree.o Language.o Lexer.o TreeFile.o Back_end.o List.o 
+ALL_OBJECTS  = main.o Tree.o TextLib.o Recursive_descent.o Suff_tree.o Language.o Lexer.o TreeFile.o Back_end.o Stack.o 
 SUFF_OBJECTS = main.o LogsLib.o  Language.o Suff_tree.o
 
 
@@ -39,5 +39,5 @@ TreeFile.o: ../TreeFile/TreeFile.cpp
 	$(CC) -c ../TreeFile/TreeFile.cpp $(I_FLAG)
 Back_end.o: ../Back_end/Back_end.cpp
 	$(CC) -c ../Back_end/Back_end.cpp $(I_FLAG)
-List.o: ../List/List.cpp
-	$(CC) -c ../List/List.cpp $(I_FLAG)
+Stack.o: ../Stack/Stack.cpp
+	$(CC) -c ../Stack/Stack.cpp $(I_FLAG)
