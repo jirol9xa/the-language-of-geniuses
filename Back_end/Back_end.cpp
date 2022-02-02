@@ -12,16 +12,16 @@
 
 static Name *nameCtor();
 static int   generateGeneral (Tree  *tree,  int   *iter);
-static int   generateStmnt   (Node  *stmnt, Stack *glob_name_space, Stack *name_space, int *iter);
-static int   generateDefine  (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter);
-static int   generateGlobal  (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter,   int is_init);
-static int   generateVar     (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter,   int is_init);
-static int   addNewName      (Node  *node,  Stack *glob_name_space, Stack *name_space, int  is_var, int *shift);
-static int   generateCall    (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter);
-static int   generateArgs    (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter);
-static int   generateFuncCode(Node  *node,  Stack *glob_name_space, Stack *name_space);
-static int   generateMath    (Node  *node,  Stack *glob_name_space, Stack *name_space, int *iter);
-static int makeArgs          (Node *node,   Stack *name_space);
+static int   generateStmnt   (Node  *stmnt, Glob_Name_space *glob_name_space, Stack *name_space, int *iter);
+static int   generateDefine  (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter);
+static int   generateGlobal  (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter,   int is_init);
+static int   generateVar     (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter,   int is_init);
+static int   addNewName      (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int  is_var, int *shift);
+static int   generateCall    (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter);
+static int   generateArgs    (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter);
+static int   generateFuncCode(Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space);
+static int   generateMath    (Node  *node,  Glob_Name_space *glob_name_space, Stack *name_space, int *iter);
+static int makeArgs          (Node *node,   Glob_Name_space *name_space);
 static int   writeNode       (Node  *node,  int   *iter);
 
 static int   getIndex        (Stack *name_space, char *name, int is_func);
@@ -69,15 +69,21 @@ int generateAsm(Tree *tree, const char *dst_name)
     Stack name_space = {};
     stackCtor(&name_space, 0);
 
+    Glob_Name_space global_name_space = {};
+    stackCtor(&(global_name_space.func), 0);
+    stackCtor(&(global_name_space.global_vars), 0);
+
     // creating const memory
     writeLogs("PUSH 20\n");
     writeLogs("POP bx\n");
     // bx contains the beginning of a free memory 
 
     writeLogs("JMP :main\n");
-    generateStmnt(tree->root, &name_space, &iter);
-    
-    stackDtor(&name_space);
+
+    generateStmnt(tree->root, &global_name_space, &name_space, &iter); 
+
+    stackDtor(&(global_name_space.func));
+    stackDtor(&(global_name_space.global_vars));
     closeLogs();
 
     return 0;
@@ -98,7 +104,7 @@ static int generateGeneral(Tree *tree, int *iter)
 }
 
 
-static int generateStmnt(Node *stmnt, Stack *glob_name_space, Stack *name_space, int *iter)
+static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *name_space, int *iter)
 {
     assert(stmnt);
     assert(glob_name_space);
@@ -139,7 +145,7 @@ static int generateStmnt(Node *stmnt, Stack *glob_name_space, Stack *name_space,
             shift      = findElem(name_space, left->value.str);
         }
 
-        int glob_shift = findElem(glob_name_space, left->value.str);
+        int glob_shift = findElem(&(glob_name_space->global_vars), left->value.str);
 
         if (name_space && shift == -1) //for local vars
         {
@@ -157,7 +163,7 @@ static int generateStmnt(Node *stmnt, Stack *glob_name_space, Stack *name_space,
         }
         else if (glob_shift == -1) //for glob vars, if it's not exists
         {
-            stackPush(glob_name_space, new_var);
+            stackPush(&(glob_name_space->global_vars), new_var);
             
             writeLogs("POP [bx + ax]\n");
             INC_VAR_AMNT;
@@ -184,7 +190,7 @@ static int generateStmnt(Node *stmnt, Stack *glob_name_space, Stack *name_space,
 }
 
 
-static int generateGlobal(Node *node, Stack *glob_name_space, Stack *name_space, int *iter, int is_init)
+static int generateGlobal(Node *node, Glob_Name_space *glob_name_space, Stack *name_space, int *iter, int is_init)
 {
     assert(node);
     assert(name_space);
@@ -254,7 +260,7 @@ static int writeNode(Node *node, int *iter)
 //}
 
 
-static int generateDefine(Node *node, Stack *glob_name_space, Stack *name_space, int *shift)
+static int generateDefine(Node *node, Glob_Name_space *glob_name_space, Stack *name_space, int *shift)
 {    
     assert(node);
     if (KWORD_TYPE(node) != IS_DEFINE)
@@ -267,14 +273,13 @@ static int generateDefine(Node *node, Stack *glob_name_space, Stack *name_space,
         printf("!!! ERROR Can't define a function inside another !!!\n");
     }
 
-    //int start_size  = name_space->size;
     Stack Name_space = {};
     stackCtor(&Name_space, 0);
 
     Node *func_node = node->left_child;
 
     // хорошая идея, но пока не надо
-    addNewName(func_node->left_child, glob_name_space, 0, shift);
+    addNewFunc(func_node->left_child, glob_name_space, 0);
 
     if (func_node->right_child)
     {
@@ -310,7 +315,7 @@ static int generateDefine(Node *node, Stack *glob_name_space, Stack *name_space,
         // Если переменная глобальная, то у нее абсолютный адрес              //
         ////////////////////////////////////////////////////////////////////////
 
-static int generateCall(Node *node, Stack *glob_name_space, Stack *name_space, int *iter)
+static int generateCall(Node *node, Glob_Name_space *glob_name_space, Stack *name_space, int *iter)
 {
     assert(node);
     assert(name_space);
@@ -367,7 +372,7 @@ static int generateCall(Node *node, Stack *glob_name_space, Stack *name_space, i
     \param [Node *]node Poiter to first param node
     \param [int *]iter Number of cmd
 */
-static int generateArgs(Node *node, Stack *glob_name_space, Stack *name_space, int *iter)
+static int generateArgs(Node *node, Glob_Name_space *glob_name_space, Stack *name_space, int *iter)
 {
     assert(node);
     assert(name_space);
@@ -385,11 +390,31 @@ static int generateArgs(Node *node, Stack *glob_name_space, Stack *name_space, i
         }
         else if (param_type.is_variable)
         {
-            int index = getIndex(name_space, param->value.str, 0);
+            //различать локальные и глобальные переменные т.к. локальные 
+            //завязаны на bx
+            char *name = param->value.str;
 
-            writeLogs("PUSH [%d]\n", index);
+            int index = findElem(name_space, name);
+            if (index >= 0)
+            {
+                writeLogs("PUSH [bx + %d]\n", index);
+            }
+            else
+            {
+                index = findElem(glob_name_space, name);
+            }
+
+            if (index >= 0)
+            {
+                writeLogs("PUSH [%d]\n", index);
+            }
+            else
+            {
+                printf("!!! ERROR Can't find variable \"%s\" !!!\n", name);
+                SYNTAX_ERR;
+            }
         }
-        
+
         // пока что хотя бы числа и аргументы передавать
         //else if (param_type.is_keyword == IS_CALL)
         //{
@@ -402,28 +427,35 @@ static int generateArgs(Node *node, Stack *glob_name_space, Stack *name_space, i
     }
     while (node->left_child);
 
-    //return args_amnt - 1; // (-1) because of do while
+    return 0;
 }
 
 
-//static int getIndex(List *name_space, char *name, int is_func)
-//{
-//    assert(name_space);
-//    assert(name);
-//
-//    Name *name_info = findElem(name_space, name);
-//
-//    if (is_func)
-//    {
-//        return name_info->index.asm_indx;
-//    }
-//
-//    return name_info->index.ram_indx;
-//}
+static int getIndex(Glob_Name_space *global_name_space, Stack *name_space, char *name)
+{
+    assert(name_space);
+    assert(name);
+
+    int index = findElem(name_space, name);
+
+    if (index == -1)
+    {
+        index = findElem(global_name_space, name);
+    }
+
+    if (index == 0 || index == -1)
+    {
+        printf("!!! ERROR Can't find variable \"%s\" !!!\n", name);
+
+        return -1;
+    }
+
+    return index;
+}
 
 
 // mb useless
-static int generateFuncCode(Node *node, Stack *glob_name_space, Stack *name_space)
+static int generateFuncCode(Node *node, Glob_Name_space *glob_name_space, Stack *name_space)
 {
     assert(node);
     assert(name_space);
@@ -438,7 +470,7 @@ static int generateFuncCode(Node *node, Stack *glob_name_space, Stack *name_spac
     \brief  Function for making math expressions and putting 
             result in stack
 */
-static int generateMath(Node *node, Stack *glob_name_space, Stack *name_space, int *iter)
+static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *name_space, int *iter)
 {
     assert(node);
     assert(name_space);
@@ -502,7 +534,7 @@ static int generateMath(Node *node, Stack *glob_name_space, Stack *name_space, i
     \param [Stack *]name_space Name space
     \param [char *]elem Name of searching elem
     \param [char *]func_name Name of fun that addresses element
-    \return returns rem idx if var, 0 if func and -1 if 
+    \return returns rem idx if var, -2 if func and -1 if 
     search was failed 
 */
 static int findElem(Stack *name_space, char *elem)
@@ -516,7 +548,7 @@ static int findElem(Stack *name_space, char *elem)
 
         if (!strcmp(name_member->name, elem))
         {
-            return !(name_member->Ntype.is_func) + name_member->Ntype.is_var * i;
+            return (name_member->Ntype.is_func) * (-2) + name_member->Ntype.is_var * i;
         }
     }
 
@@ -535,7 +567,7 @@ static int makeArgs(Node *node, Stack *name_space)
     assert(node);
     assert(name_space);
 
-    while (node->left_child)
+    do 
     {   
         Node *right = node->right_child;
 
@@ -545,6 +577,29 @@ static int makeArgs(Node *node, Stack *name_space)
 
         stackPush(name_space, new_arg);
     }
+    while (node->left_child);
+
+    return 0;
+}
+
+
+static int addNewFunc(Glob_Name_space *global_name_space, char *name)
+{
+    assert(global_name_space);
+    assert(name);
+
+    if (findElem(&(global_name_space->func), name) != -1 || findElem(&(global_name_space->global_vars), name) != -1)
+    {
+        printf("!!! ERROR Func or var with name \"%s\" already exist !!!\n", name);
+        SYNTAX_ERR;
+    }
+
+    Name *new_func = nameCtor();
+
+    strcpy(new_func->name, name);
+    new_func->Ntype.is_func = 1;
+
+    stackPush(&(global_name_space->func), new_func);
 
     return 0;
 }

@@ -15,8 +15,13 @@
         } Ntype;
         int ram_indx;
     };
+
+    struct Glob_Name_space
+    {
+        Stack global_vars;
+        Stack func;
+    };
     
+
     int generateAsm(Tree *tree, const char *dst_name);
-
-
 #endif
