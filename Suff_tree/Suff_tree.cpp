@@ -157,7 +157,7 @@ Suff_Tree *suffTreeCtor()
         i += wrd_size + 1 + num_size;
     }
 
-    //printSuffTree(tree->root);
+    printSuffTree(tree->root);
 
     return tree;
 }
@@ -209,6 +209,7 @@ static int *addWord(Edge *edge, int iter, int wrd_size, int status)
     else
     {
         cur_node = edge->next;
+        shift++;
     }
 
     Edge **new_edge = &(cur_node->edges[RESERVED_WORDS[iter + shift] - 'a']);

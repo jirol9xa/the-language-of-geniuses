@@ -9,6 +9,7 @@
 #include "Recursive_descent.h"
 #include "Language.h"
 #include "TreeFile.h"
+#include "Stack.h"
 #include "Back_end.h"
 
 
@@ -31,7 +32,7 @@ int readCode(FILE *sourse, Tree *tree)
     text[num_symb] = '\0';
 
     Suff_Tree *suff_tree = suffTreeCtor();
-
+        
     constructTree(tree, text, suff_tree);
 
     writeTree(tree, "My_tree");

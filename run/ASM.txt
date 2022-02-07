@@ -3,13 +3,47 @@ POP bx
 JMP :main
 :foo
 PUSH 3
+POP [bx+ax]
+PUSH [ax]
+PUSH 1
+ADD
+POP [ax]
 PUSH 4
 ADD
 POP cx
 :RET
 :main
-PUSH 3
+PUSH bx
+POP [bx+ax]
+PUSH [ax]
+PUSH 1
+ADD
+POP [ax]
+PUSH ax
+PUSH bx
+ADD
+POP bx
+PUSH 0
+POP ax
 PUSH 5
+POP [bx+ax]
+PUSH [ax]
+PUSH 1
+ADD
+POP [ax]
+:CALL foo
+PUSH cx
+PUSH [bx-1]
+POP   ax
+PUSH bx
+PUSH ax
+SUB
+POP  bx
 PUSH 3
 ADD
+POP [bx+ax]
+PUSH [ax]
+PUSH 1
+ADD
+POP [ax]
 HLT

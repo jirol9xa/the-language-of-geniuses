@@ -1,7 +1,9 @@
 #ifndef STACK_H
     #define STACK_H
 
-    #define type Name*
+    struct Name;
+
+    #define type Name
     #define DEBUG_LVL 0
     //const type POISON = 0xDEAD; 
 

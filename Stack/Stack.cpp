@@ -5,8 +5,8 @@
 #include "ctype.h"
 #include "string.h"
 #include "Tree.h"
-#include "Back_end.h"
 #include "Stack.h"
+#include "Back_end.h"
 
 //extern FILE* logs;
 
@@ -160,12 +160,12 @@ static int stackResize(Stack* stk, int upper)
     if (upper) {
         void* temp_ptr = nullptr;
 
-        temp_ptr = realloc(stk->data, sizeof(type) * 2 * stk->capacity);
+        temp_ptr = realloc(stk->data, sizeof(type) * 2 * stk->capacity + !stk->capacity);
         is_debug_lvl_1(temp_ptr = realloc(LEFT_CANARY(stk), sizeof(type) * 2 * stk->capacity  + sizeof(u_int64_t) * 2));
 
         if (temp_ptr != nullptr) {
             stk->capacity *= 2;
-            stk->data = (type*) ((char*) temp_ptr + sizeof(u_int64_t));
+            stk->data = (type*) temp_ptr;// + sizeof(u_int64_t));
 
             is_debug_lvl_1(
                 setCanary(stk, 0);
@@ -196,7 +196,7 @@ static int stackResize(Stack* stk, int upper)
         )
 
         #if DEBUG_LVL <= 1
-            stk->data = (Name *) realloc(stk->data, sizeof(type) * (stk->capacity / 2));
+            stk->data = (type *) realloc(stk->data, sizeof(type) * (stk->capacity / 2));
         #endif
 
         stk->capacity /= 2;

@@ -161,7 +161,7 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
         i++;
 
         sscanf(text + i, "%m[A-Za-z-_0-9]%n", &(node->value.str), &size);
-
+ 
         int prnt_stat = 0;
 
         if (node->parent)
@@ -178,6 +178,12 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
     sscanf(text + i, "%m[a-zA-Z_*=<>&|+-0-9]%n", &(node->value.str), &size);
 
     int status = isKeyword(node->value.str, suff_tree);
+    if (!strcmp(node->value.str, "call"))
+    {
+        PRINT_RESHETKA;
+        PRINT_LINE;
+        printf("status = %d\n", status);
+    }
 
     node->node_type.number = status + !status * (1 << 7);
 
