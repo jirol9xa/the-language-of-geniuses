@@ -15,7 +15,6 @@ JMP END1
 JMP END1
 :END1
 PUSH [bx + 0]
-ADD
 PUSH 1
 SUB
 POP [bx + ax]
@@ -36,8 +35,6 @@ POP bx
 PUSH 0
 POP ax
 PUSH [bx + 1]
-!!!!GLOBAL2
-PUSH [1]
 POP [bx + ax]
 PUSH ax
 PUSH 1
@@ -53,8 +50,6 @@ SUB
 PUSH 1
 SUB
 POP bx
-PUSH 0
-ADD
 POP [bx + ax]
 PUSH ax
 PUSH 1

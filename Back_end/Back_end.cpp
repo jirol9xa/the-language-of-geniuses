@@ -485,19 +485,18 @@ static int generateArgs(Node *node, Glob_Name_space *glob_name_space, Stack *nam
         else
         {
             index = findElem(&(glob_name_space->global_vars), name);
-        }
 
-        if (index >= 0)
-        {
-            PRINT_LINE;
-            printf("!!! GLOBAL\n");
-            writeLogs("!!!!GLOBAL2\n");
-            writeLogs("PUSH [%d]\n", index);
-        }
-        else
-        {
-            printf("!!! ERROR Can't find variable \"%s\" !!!\n", name);
-            SYNTAX_ERR;
+            if (index >= 0)
+            {
+                PRINT_LINE;
+                writeLogs("!!!!GLOBAL2\n");
+                writeLogs("PUSH [%d]\n", index);
+            }
+            else
+            {
+                printf("!!! ERROR Can't find variable \"%s\" !!!\n", name);
+                SYNTAX_ERR;
+            }
         }
     }
 

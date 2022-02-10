@@ -4,8 +4,8 @@ define fctr(n)
    {
    return 1;
    }
-   a = n + -1;
-   p = fctr(a) + 0;
+   a = n - 1;
+   p = fctr(a);
    return p * n;
 }
 define main()
