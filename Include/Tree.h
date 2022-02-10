@@ -130,7 +130,7 @@
                 случае
     */
     //Node *searchElem(Node *node, type_t elem);
-    int printTree(Node *node);
+    int  printTree(Node *node);
     int  printNodeValue(Node *node);
 
 

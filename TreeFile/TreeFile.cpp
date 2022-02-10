@@ -161,7 +161,10 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
         i++;
 
         sscanf(text + i, "%m[A-Za-z-_0-9]%n", &(node->value.str), &size);
- 
+        //strcat(node->value.str, "\0");
+
+        //printf("now vars name in string = %s\n", node->value.str);
+
         int prnt_stat = 0;
 
         if (node->parent)
@@ -184,7 +187,7 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
         PRINT_LINE;
         printf("status = %d\n", status);
     }
-
+        
     node->node_type.number = status + !status * (1 << 7);
 
     return i + size;

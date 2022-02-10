@@ -134,7 +134,16 @@ int stackPush(Stack* stk, type value)
 
     stk->size ++;
 
-    MemCpy((char*) &stk->data[stk->size - 1], &value, sizeof(type));
+    MemCpy((char*) &(stk->data[stk->size - 1]), &value, sizeof(type));
+
+    #define NEW_ELEM stk->data[stk->size - 1]
+    NEW_ELEM.name = (char *) calloc(strlen(value.name) + 1, sizeof(char));
+
+    strcpy(NEW_ELEM.name, value.name);
+    NEW_ELEM.name[strlen(value.name)] = '\0';
+    printf("stack name = %s\n", stk->data[stk->size - 1].name);
+
+    #undef NEW_ELEM
 
     is_debug_lvl_1(
         if (hashCalc(stk) == ERR_INVALID_PTR) return ERR_PUSH_FAILED;
@@ -160,11 +169,13 @@ static int stackResize(Stack* stk, int upper)
     if (upper) {
         void* temp_ptr = nullptr;
 
-        temp_ptr = realloc(stk->data, sizeof(type) * 2 * stk->capacity + !stk->capacity);
+        temp_ptr = realloc(stk->data, sizeof(type) * (2 * stk->capacity + !stk->capacity));
+        
         is_debug_lvl_1(temp_ptr = realloc(LEFT_CANARY(stk), sizeof(type) * 2 * stk->capacity  + sizeof(u_int64_t) * 2));
 
         if (temp_ptr != nullptr) {
             stk->capacity *= 2;
+            stk->capacity += !stk->capacity;
             stk->data = (type*) temp_ptr;// + sizeof(u_int64_t));
 
             is_debug_lvl_1(

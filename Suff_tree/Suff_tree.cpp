@@ -157,7 +157,7 @@ Suff_Tree *suffTreeCtor()
         i += wrd_size + 1 + num_size;
     }
 
-    printSuffTree(tree->root);
+    //printSuffTree(tree->root);
 
     return tree;
 }

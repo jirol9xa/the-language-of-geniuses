@@ -1,9 +1,9 @@
-define foo(a, b)
+define foo(a, b, c)
 {
-    x = 3;
-    return 4 + x;
+    x = a + b + c;
+    return x;
 }
 define main()
 {
-    z = foo(3, 5) + 3;
+    z = foo(3, 5, 10) + 10;
 }$

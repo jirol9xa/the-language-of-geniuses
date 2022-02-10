@@ -389,6 +389,11 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
         //INC(iter);
     }
 
+    if (KEY_NUMBER == IS_IF)
+    {
+        stmnt = GetIf(tokens, iter);
+    }
+
     return stmnt;
 }
 
@@ -913,7 +918,7 @@ static Node *GetDefine(Tokens_t *tokens, int *iter)
     assert(tokens);
     assert(iter);
 
-    Node *def_node = tokens->array[(*iter)++];
+    Node *def_node  = tokens->array[(*iter)++];
     Node *func_node = (Node *)calloc(1, sizeof(Node));
 
     def_node->node_type.bytes.is_serv_node = 1;
@@ -923,15 +928,15 @@ static Node *GetDefine(Tokens_t *tokens, int *iter)
     func_node->node_type.bytes.is_serv_node = 1;
     func_node->node_type.bytes.is_keyword = IS_FUNCTION;
 
-    func_node->value.str = (char *)calloc(5, sizeof(char));
+    func_node->value.str   = (char *)calloc(5, sizeof(char));
     strcpy(func_node->value.str, "func");
 
-    func_node->left_child = tokens->array[(*iter)++]; // skip func name
+    func_node->left_child  = tokens->array[(*iter)++]; // skip func name
 
     func_node->right_child = GetArgs(tokens, iter, 0);
 
-    def_node->left_child = func_node;
-    def_node->right_child = GetStatement(tokens, iter);
+    def_node->left_child   = func_node;
+    def_node->right_child  = GetStatement(tokens, iter);
 
     return def_node;
 }

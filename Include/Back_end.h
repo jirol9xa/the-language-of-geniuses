@@ -4,7 +4,7 @@
 
     struct Name
     {
-        char  name[32];          //  !!!! DON"T USE FREEE!!!!!!!!!  will be freed in treeDtor
+        char *name;          //  !!!! DON"T USE FREEE!!!!!!!!!  will be freed in treeDtor
         char  func_name[32]; // for naming func where var were created  
         struct
         {

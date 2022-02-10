@@ -1,49 +1,66 @@
 PUSH 20
 POP bx
-JMP :main
+JMP main
 :foo
-PUSH 3
-POP [bx+ax]
-PUSH [ax]
+PUSH [bx + 2]
+PUSH [bx + 1]
+ADD
+PUSH [bx + 0]
+ADD
+POP [bx + ax]
+PUSH ax
 PUSH 1
 ADD
-POP [ax]
-PUSH 4
-ADD
+POP ax
+PUSH [bx + 3]
 POP cx
 :RET
 :main
-PUSH bx
-POP [bx+ax]
-PUSH [ax]
+PUSH ax
+POP [bx + ax]
+PUSH ax
 PUSH 1
 ADD
-POP [ax]
+POP ax
 PUSH ax
 PUSH bx
 ADD
 POP bx
 PUSH 0
 POP ax
-PUSH 5
-POP [bx+ax]
-PUSH [ax]
+PUSH 3
+POP [bx + ax]
+PUSH ax
 PUSH 1
 ADD
-POP [ax]
+POP ax
+PUSH 5
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
+PUSH 10
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
 :CALL foo
 PUSH cx
-PUSH [bx-1]
-POP   ax
+PUSH [bx - 1]
+POP ax
 PUSH bx
 PUSH ax
 SUB
-POP  bx
-PUSH 3
+PUSH 1
+SUB
+POP bx
+PUSH 10
 ADD
-POP [bx+ax]
-PUSH [ax]
+POP [bx + ax]
+PUSH ax
 PUSH 1
 ADD
-POP [ax]
+POP ax
 HLT
