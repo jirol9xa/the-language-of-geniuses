@@ -20,11 +20,13 @@ static int   generateStmnt   (Node *stmnt, Glob_Name_space *glob_name_space, Sta
 static int   generateDefine  (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generateGlobal  (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space,   int is_init);
 static int   generateVar     (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space,   int is_init);
-static int   addNewName      (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space, int  is_var, int *shift);
 static int   generateCall    (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generateArgs    (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generateFuncCode(Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generateMath    (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
+static int   generateIf      (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
+static int   generatePrintf  (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
+static int   addNewName      (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space, int  is_var, int *shift);
 static int   makeArgs        (Node *node,  Stack *name_space);
 static int   addNewFunc      (Glob_Name_space *global_name_space, char *name);
 
@@ -87,6 +89,9 @@ static int   findElem        (Stack *name_space, char *elem);
     showNames(name_space);        \
     PRINT_LINE;                   \
 }
+
+
+int IF_AMNT = 0;
 
 
 static Name *nameCtor()
@@ -155,7 +160,7 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
 
     if (name_space)
     {
-        SHOW_NAMES(name_space);
+        //SHOW_NAMES(name_space);
     }
 
     Node *node = stmnt->right_child;
@@ -163,6 +168,7 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
 
     if (node_type.is_operator && node->value.str[0] == '=')
     {
+        PRINT_LINE;
         Node *left     = node->left_child;
         auto left_type = left->node_type.bytes;
 
@@ -171,18 +177,18 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
             SYNTAX_ERR;
         }
 
-        SHOW_NAMES(name_space);
+        //SHOW_NAMES(name_space);
 
         generateMath(node->right_child, glob_name_space, name_space);
 
-        SHOW_NAMES(name_space);
+        //SHOW_NAMES(name_space);
 
         // adding var in name_space
         // !!!!make function!!!!
         //use nameDtor
         Name *new_var = nameCtor(); 
 
-        SHOW_NAMES(name_space);
+        //SHOW_NAMES(name_space);
 
 
         strcpy(new_var->name, left->value.str);
@@ -234,6 +240,7 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
     }
     else if (node_type.is_keyword == IS_RETURN)
     {
+        PRINT_LINE;
         generateMath(node->right_child, glob_name_space,name_space);
         
         writeLogs("POP cx\n");
@@ -241,9 +248,21 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
     }
     else if (node_type.is_keyword == IS_CALL)
     {
+        PRINT_LINE;
         generateCall(node, glob_name_space, name_space);
     }
+    else if (node_type.is_keyword == IS_IF)
+    {
+        PRINT_LINE;
+        generateIf(node, glob_name_space, name_space);
+    }
+    else if (node_type.is_keyword == IS_PRINTF)
+    {
+        PRINT_LINE;
+        generatePrintf(node, glob_name_space, name_space);
+    }
 
+    PRINT_LINE;
     return 0;
 }
 
@@ -470,6 +489,9 @@ static int generateArgs(Node *node, Glob_Name_space *glob_name_space, Stack *nam
 
         if (index >= 0)
         {
+            PRINT_LINE;
+            printf("!!! GLOBAL\n");
+            writeLogs("!!!!GLOBAL2\n");
             writeLogs("PUSH [%d]\n", index);
         }
         else
@@ -561,7 +583,7 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
 
     PRINT_LINE;
 
-    SHOW_NAMES(name_space);
+    //SHOW_NAMES(name_space);
 
     if (node_type.is_number)
     {
@@ -592,19 +614,48 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
             case '/':
                 writeLogs("DIV\n");
                 break;
+            case '>':
+                if (node->value.str[1] == '=')
+                {
+                    writeLogs("JAE TRUE%d\n", IF_AMNT);
+                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                }
+                else
+                {
+                    writeLogs("JA TRUE%d\n", IF_AMNT);
+                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                }
+                break;
+            case '<':
+                if (node->value.str[1] == '=')
+                {
+                    writeLogs("JBE TRUE%d\n", IF_AMNT);
+                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                }
+                writeLogs("JB TRUE%d\n", IF_AMNT);
+                writeLogs("JMP FALSE%d\n", IF_AMNT);
+                break;
+            case '=':
+                if (node->value.str[1] == '=')
+                {
+                    writeLogs("JE TRUE%d\n", IF_AMNT);
+                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                }
+                else
+                {
+                    SYNTAX_ERR;
+                }
+                break;
         } 
     }
     else if (node_type.is_variable)
     {
-        PRINT_LINE;
         int shift = findElem(name_space, node->value.str);
-        printf("node->value.str = %s\n", node->value.str);
 
-        printf("now all elems in stack:\n");
-        for (int i = name_space->size - 1; i >= 0; i--)
-        {
-            printf("var name = %s, index = %d\n", name_space->data[i].name, i);
-        }
+        //for (int i = name_space->size - 1; i >= 0; i--)
+        //{
+        //    printf("var name = %s, index = %d\n", name_space->data[i].name, i);
+        //}
         
         if (shift == -1)
         {
@@ -617,6 +668,8 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
             }
             
             //if exist glob var
+            printf("!!! GLOBAL\n");
+            writeLogs("!!!!GLOBAL1\n");
             writeLogs("PUSH [%d]\n", shift);
             
             return 0;
@@ -625,7 +678,7 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
         writeLogs("PUSH [bx + %d]\n", shift);
     }
 
-    SHOW_NAMES(name_space);
+    //SHOW_NAMES(name_space);
 
     return 0;
 }
@@ -648,7 +701,7 @@ static int findElem(Stack *name_space, char *elem)
     printf("stck sz = %d\n", name_space->size);
     printf("stack data = %p\n", name_space->data);
 
-    SHOW_NAMES(name_space);
+    //SHOW_NAMES(name_space);
 
     for (int i = name_space->size - 1 ; i >= 0; i--)
     {
@@ -696,7 +749,7 @@ static int makeArgs(Node *node, Stack *name_space)
         node = node->left_child;
     }
 
-    SHOW_NAMES(name_space);
+    //SHOW_NAMES(name_space);
 
     return 0;
 }
@@ -742,6 +795,51 @@ static int showNames(Stack *name_space)
         printf("name%d = \n", i);
         printf("%s\n", name_space->data[i].name);
     }
+
+    return 0;
+}
+
+
+static int generateIf(Node *node, Glob_Name_space *glob_name_space, Stack *name_space)
+{
+    assert(node);
+    assert(glob_name_space);
+    assert(name_space);
+
+    IF_AMNT++;
+
+    Node *decision = node->right_child;
+
+    generateMath(node->left_child, glob_name_space, name_space);
+
+    writeLogs(":TRUE%d\n", IF_AMNT);
+    generateStmnt(decision->left_child, glob_name_space, name_space);
+    writeLogs("JMP END%d\n", IF_AMNT);
+
+    writeLogs(":FALSE%d\n", IF_AMNT);
+    if (decision->right_child)
+    {
+        generateStmnt(decision->right_child, glob_name_space, name_space);
+    }
+    writeLogs("JMP END%d\n", IF_AMNT);
+
+    writeLogs(":END%d\n", IF_AMNT);
+
+    return 0;
+}
+
+
+static int generatePrintf(Node *node,  Glob_Name_space *glob_name_space, Stack *name_space)
+{
+    assert(node);
+    assert(glob_name_space);
+    assert(name_space);
+    assert(node->right_child);
+
+    generateMath(node->right_child, glob_name_space, name_space);
+
+    writeLogs("OUT\n");
+    writeLogs("POP\n");
 
     return 0;
 }

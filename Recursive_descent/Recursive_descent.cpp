@@ -38,6 +38,7 @@ static Node *GetArgs           (Tokens_t *tokens, int *iter, int for_global);
 static int   skipBrkts         (Tokens_t *tokens, int *iter, int is_open, int is_round);
 static Node *GetAddSub         (Tokens_t *tokens, int *iter);
 static Node *GetDefine         (Tokens_t *tokens, int *iter);
+static Node *GetPrintf          (Tokens_t *tokens, int *iter);
 
 
 #define FIRST_SYMB(iter) tokens->array[*iter]->value.str[0]
@@ -132,16 +133,31 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
         if (tokens->size + 1 > tokens->capacity)
         {
             tokens->capacity *= 2;
-            void *temp_ptr = (Node **)realloc(tokens->array, sizeof(Node *) * tokens->capacity);
+            void *temp_ptr = (Node **) realloc(tokens->array, sizeof(Node *) * tokens->capacity);
             if (temp_ptr)
             {
-                tokens->array = (Node **)temp_ptr;
+                tokens->array = (Node **) temp_ptr;
             }
             else
             {
                 return -1;
             }
         }
+
+        ////print all tokens
+        //for (int i = 0; i < tokens->size; i++)
+        //{
+        //    Node *tkn = tokens->array[i];
+        //
+        //    if (tkn->value.str)
+        //    {
+        //        printf("tkn name = %s, status = %d\n", tkn->value.str, tkn->node_type.number);
+        //    }
+        //    else
+        //    {
+        //        printf("tkn value = %lg\n", tkn->value.number);
+        //    }
+        //}
 
         lexAnal(tokens, suff_tree);
 
@@ -261,7 +277,8 @@ static Node *oper()
 
     if (!strchr("+-/*^()$>=<{};,&|", node->value.str[0]))
     {
-        
+        printf("String + 1 = %c\n", *STRING);
+        printf("node->value.str[0] = %c\n", node->value.str[0]);
         SYNTAX_ERR;
     }
 
@@ -389,11 +406,6 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
         //INC(iter);
     }
 
-    if (KEY_NUMBER == IS_IF)
-    {
-        stmnt = GetIf(tokens, iter);
-    }
-
     return stmnt;
 }
 
@@ -405,19 +417,32 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
 
     skipBrkts(tokens, iter, 1, 0);
 
-    Node *stmnt = (Node *)calloc(1, sizeof(Node));
+    Node *stmnt = (Node *) calloc(1, sizeof(Node));
 
     stmnt->node_type.bytes.is_serv_node = 1;
 
-    stmnt->value.str = (char *)calloc(10, sizeof(char));
+    stmnt->value.str = (char *) calloc(10, sizeof(char));
     strcpy(stmnt->value.str, "statement");
 
     Node *stmnt_val = nullptr;
 
     auto token_type = tokens->array[*iter]->node_type.bytes;
 
+    if (token_type.is_keyword == IS_IF)
+    {
+        stmnt->right_child = GetIf(tokens, iter);
+        return stmnt;
+    }
+
+    if (token_type.is_keyword == IS_PRINTF)
+    {
+        stmnt->right_child = GetPrintf(tokens, iter);
+        return stmnt;
+    }
+
     if (!token_type.is_func && !token_type.is_variable && token_type.is_keyword != IS_RETURN)
     {
+        printf("%s\n", tokens->array[*iter]->value.str);
         SYNTAX_ERR;
     }
 
@@ -509,7 +534,67 @@ static Node *GetIf(Tokens_t *tokens, int *iter)
 
     Node *if_ = tokens->array[(*iter)++];
 
-    if_->left_child = GetOperator(tokens, iter);
+    //if (!skipBrkts(tokens, iter, 1, 1))
+    //{
+    //    SYNTAX_ERR;
+    //}
+
+    if_->left_child = GetAddSub(tokens, iter);
+
+    //if(!skipBrkts(tokens, iter, 0, 1))
+    //{
+    //    SYNTAX_ERR;
+    //}
+
+    Node *decision = if_->right_child;
+    decision = nodeCtor(if_, decision, 0);
+
+    decision->node_type.bytes.is_serv_node = 1;
+
+    decision->value.str = (char *) calloc(strlen("decision") + 1, sizeof(char));
+    strcpy(decision->value.str, "decision");
+
+    skipBrkts(tokens, iter, 1, 0);
+
+    //if (!skipBrkts(tokens, iter, 1, 0))
+    //{
+    //    SYNTAX_ERR;
+    //}
+
+    decision->left_child = GetStatement(tokens, iter); //true node
+
+    if (tokens->array[*iter]->value.str[0] == '}')
+    {
+        INC(iter);
+    }
+    else
+    {
+        SYNTAX_ERR;
+    }
+    //skipBrkts(tokens, iter, 0, 0);
+
+    //int status = skipBrkts(tokens, iter, 0, 0);
+    //
+    //if (!status)
+    //{
+    //    SYNTAX_ERR;
+    //}
+
+    //if (status == 1 && tokens->array[*iter]->node_type.bytes.is_keyword == IS_ELSE)
+    //{
+    //    INC(iter);
+    //
+    //    skipBrkts(tokens, iter, 1, 0);
+    //
+    //    decision->right_child = GetStatement(tokens, iter); //false node
+    //
+    //    if (!skipBrkts(tokens, iter, 0, 0))
+    //    {
+    //        SYNTAX_ERR;
+    //    }
+    //}
+
+    return if_;
 }
 
 
@@ -613,8 +698,6 @@ static Node *GetFunc(Tokens_t *tokens, int *iter)
 {
     assert(tokens);
     assert(iter);
-
-    
 
     Node *call_node = (Node *)calloc(1, sizeof(Node));
     Node *func_node = (Node *)calloc(1, sizeof(Node));
@@ -1036,4 +1119,19 @@ static int skipEndl(Tokens_t *tokens, int *iter)
     }
 
     return -1;
+}
+
+
+static Node *GetPrintf(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *node = tokens->array[(*iter)++];
+
+    node->right_child = GetAddSub(tokens, iter);
+
+    skipEndl(tokens, iter);
+
+    return node;
 }

@@ -1,9 +1,15 @@
-define foo(a, b, c)
+define fctr(n)
 {
-    x = a + b + c;
-    return x;
+   if (n == 1)
+   {
+   return 1;
+   }
+   a = n + -1;
+   p = fctr(a) + 0;
+   return p * n;
 }
 define main()
 {
-    z = foo(3, 5, 10) + 10;
+    b = fctr(5);
+    printf(b);
 }$
