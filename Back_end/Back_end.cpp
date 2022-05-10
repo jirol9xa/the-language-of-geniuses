@@ -120,6 +120,12 @@ int generateAsm(Tree *tree, const char *dst_name)
     // creating const memory
     writeLogs("PUSH 20\n");
     writeLogs("POP bx\n");
+    writeLogs("PUSH 0\n");
+    writeLogs("PUSH 0\n");
+    writeLogs("PUSH 0\n");
+    writeLogs("POP ax\n");
+    writeLogs("POP cx\n");
+    writeLogs("POP dx\n");
     // bx contains the beginning of a free memory 
 
     writeLogs("JMP main\n");

@@ -1,100 +1,37 @@
 PUSH 20
 POP bx
+PUSH 0
+PUSH 0
+PUSH 0
+POP ax
+POP cx
+POP dx
 JMP main
-:fctr
-PUSH [bx + 0]
-PUSH 1
-JE TRUE1
-JMP FALSE1
-:TRUE1
-PUSH 1
-POP cx
-:RET
-JMP END1
-:FALSE1
-JMP END1
-:END1
-PUSH [bx + 0]
-PUSH 1
-SUB
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH ax
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH ax
-PUSH bx
-ADD
-POP bx
-PUSH 0
-POP ax
-PUSH [bx + 1]
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-:CALL fctr
-PUSH cx
-PUSH [bx - 1]
-POP ax
-PUSH bx
-PUSH ax
-SUB
-PUSH 1
-SUB
-POP bx
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH [bx + 2]
-PUSH [bx + 0]
-MUL
-POP cx
-:RET
 :main
-PUSH ax
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH ax
-PUSH bx
-ADD
-POP bx
-PUSH 0
-POP ax
 PUSH 5
 POP [bx + ax]
 PUSH ax
 PUSH 1
 ADD
 POP ax
-:CALL fctr
-PUSH cx
-PUSH [bx - 1]
-POP ax
-PUSH bx
-PUSH ax
-SUB
+PUSH [bx + 0]
 PUSH 1
-SUB
-POP bx
+ADD
 POP [bx + ax]
 PUSH ax
 PUSH 1
 ADD
 POP ax
-PUSH [bx + 0]
+PUSH [bx + 1]
+PUSH 4
+JA TRUE1
+JMP FALSE1
+:TRUE1
+PUSH [bx + 1]
 OUT
 POP
+JMP END1
+:FALSE1
+JMP END1
+:END1
 HLT

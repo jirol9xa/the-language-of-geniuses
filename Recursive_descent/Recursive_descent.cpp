@@ -67,6 +67,11 @@ int constructTree(Tree *tree, char *string, Suff_Tree *suff_tree)
 
     constructTokens(&tokens, string, suff_tree);
 
+    for (int i = 0; i < tokens.size; ++i)
+    {
+        fprintf(stderr, "token status = %d\n", tokens.array[i]->node_type);
+    }
+
     tree->root = GetGeneral(&tokens);
 
     treeDump(tree);
@@ -395,7 +400,7 @@ static Node *GetStatement(Tokens_t *tokens, int *iter)
 
     #define KEY_NUMBER tokens->array[*iter]->node_type.bytes.is_keyword
 
-    while (tokens->array[*iter]->value.str[0] != '}' && (KEY_NUMBER != IS_WHILE) && (KEY_NUMBER != IS_IF))
+    while (tokens->array[*iter]->value.str[0] != '}' && (KEY_NUMBER != IS_WHILE))// && (KEY_NUMBER != IS_IF))
     {
         value = readStatement(tokens, iter);
 
@@ -428,8 +433,12 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
 
     auto token_type = tokens->array[*iter]->node_type.bytes;
 
+    if (token_type.is_keyword > 0)  fprintf(stderr, "token value = %s\n", tokens->array[*iter]->value.str);
+    PRINT_LINE;
+
     if (token_type.is_keyword == IS_IF)
     {
+        PRINT_LINE;
         stmnt->right_child = GetIf(tokens, iter);
         return stmnt;
     }
@@ -807,10 +816,14 @@ static int skipBrkts(Tokens_t *tokens, int *iter, int is_open, int is_round)
         }
         else
         {
+            PRINT_LINE;
+            fprintf(stderr, "brake = %c\n", FIRST_SYMB(iter));
+            fprintf(stderr, "word = %s\n", tokens->array[*iter]->value.str);
             while (TYPE_BYTES(iter).is_operator && strlen(tokens->array[*iter]->value.str) == 1 && FIRST_SYMB(iter) == '}')
             {
                 is_skipped++;
-
+                fprintf(stderr, "brake = %c\n", FIRST_SYMB(iter));
+                PRINT_LINE;   
                 free(tokens->array[*iter]->value.str); //mb segfold
                 free(tokens->array[*iter]);
                 INC(iter);

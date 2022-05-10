@@ -10,13 +10,19 @@
 
 int main(const int argc, const char **argv)
 {
-    if (argc < 2)
-    {
-        printf("!!! ERROR Can't run without sourse file !!!\n");
-        return -1;
-    }
+    //if (argc < 2)
+    //{
+    //    printf("!!! ERROR Can't run without sourse file !!!\n");
+    //    return -1;
+    //}
     
-    FILE *sourse = fopen(argv[1], "r");
+    FILE *sourse = fopen("/home/voffk4/language/run/src"/*argv[1]*/, "r");
+    if (!sourse)
+    {
+        fprintf(stderr, "Can't open src file, sourse = %p!!!\n", sourse);
+        return 0;
+    }
+    fprintf(stderr, "src = %p\n", sourse);
 
     Tree tree = {};
 
@@ -25,5 +31,7 @@ int main(const int argc, const char **argv)
     fclose(sourse);
     
     treeDtor(&tree);
+
+    system("cd .. && cd .. && cd cpu && cd ASM && ./asm ../../language/run/ASM.txt && cd .. && cd CPU && ./cpu");
     return 0;
 }
