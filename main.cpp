@@ -16,7 +16,7 @@ int main(const int argc, const char **argv)
     //    return -1;
     //}
     
-    FILE *sourse = fopen("/home/voffk4/language/run/src"/*argv[1]*/, "r");
+    FILE *sourse = fopen("src"/*argv[1]*/, "r");
     if (!sourse)
     {
         fprintf(stderr, "Can't open src file, sourse = %p!!!\n", sourse);
@@ -32,6 +32,6 @@ int main(const int argc, const char **argv)
     
     treeDtor(&tree);
 
-    system("cd .. && cd .. && cd cpu && cd ASM && ./asm ../../language/run/ASM.txt && cd .. && cd CPU && ./cpu");
+    //system("cd .. && cd .. && cd cpu && cd ASM && ./asm ../../language/run/ASM.txt && cd .. && cd CPU && ./cpu");
     return 0;
 }
