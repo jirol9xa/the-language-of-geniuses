@@ -481,11 +481,14 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
             SYNTAX_ERR;
         }
 
+        stmnt_val->parent  = stmnt;
+        stmnt->right_child = stmnt_val;
+
         free(tokens->array[*iter]->value.str);
         free(tokens->array[*iter]);
         INC(iter);
 
-        return stmnt_val;
+        return stmnt;
     }
 
     if (!TYPE_BYTES(iter + 1).is_operator && tokens->array[*iter + 1]->value.str[0] != '=')

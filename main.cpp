@@ -32,6 +32,8 @@ int main(const int argc, const char **argv)
     
     treeDtor(&tree);
 
-    //system("cd .. && cd .. && cd cpu && cd ASM && ./asm ../../language/run/ASM.txt && cd .. && cd CPU && ./cpu");
+    system("cd .. && cd .. && cd cpu && cd ASM && ./asm ../../language/run/ASM.txt");
+    PRINT_LINE;
+    system("cd .. && cd .. && cd cpu && cd CPU && ./cpu");
     return 0;
 }

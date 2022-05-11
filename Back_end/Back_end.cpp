@@ -44,6 +44,15 @@ static int   findElem        (Stack *name_space, char *elem);
     writeLogs("POP ax\n");     \
 }
 
+#define INC_DX                 \
+{                              \
+    writeLogs("PUSH dx\n");    \
+    writeLogs("PUSH 1\n");     \
+    writeLogs("ADD\n");        \
+    writeLogs("POP dx\n");     \
+}
+
+
 #define SYNTAX_ERR             \
 {                              \
     PRINT_RESHETKA;            \
@@ -417,6 +426,19 @@ static int generateCall(Node *node, Glob_Name_space *glob_name_space, Stack *nam
     writeLogs("POP [bx + ax]\n");
     INC_VAR_AMNT;
 
+    //if (args)
+    //{
+    //    generateArgs(args, glob_name_space, name_space);
+    //}
+
+    writeLogs("PUSH bx\n");
+    writeLogs("POP dx\n");
+
+    // writeLogs("PUSH ax\n");
+    // writeLogs("PUSH dx\n");
+    // writeLogs("SUB\n");
+    // writeLogs("POP ax\n");
+
     // изменим значение bx
     writeLogs("PUSH ax\n");
     writeLogs("PUSH bx\n");
@@ -429,7 +451,7 @@ static int generateCall(Node *node, Glob_Name_space *glob_name_space, Stack *nam
 
     if (args)
     {
-        generateArgs(args, glob_name_space, name_space);
+       generateArgs(args, glob_name_space, name_space);
     }
 
     writeLogs(":CALL %s\n", func_node->left_child->value.str);
@@ -486,7 +508,7 @@ static int generateArgs(Node *node, Glob_Name_space *glob_name_space, Stack *nam
         int index = findElem(name_space, name);
         if (index >= 0)
         {
-            writeLogs("PUSH [bx + %d]\n", index);
+            writeLogs("PUSH [dx + %d]\n", index);
         }
         else
         {
@@ -515,6 +537,7 @@ static int generateArgs(Node *node, Glob_Name_space *glob_name_space, Stack *nam
     
     writeLogs("POP [bx + ax]\n"); // вычислять смещение
     INC_VAR_AMNT;
+    //INC_DX;
     node = node->left_child;
 
     return 0;

@@ -1,9 +1,15 @@
+define fctr(n)
+{
+   if (n == 1)
+   {
+   return 1;
+   }
+   a = n - 1;
+   p = fctr(a);
+   return p * n;
+}
 define main()
 {
-    b = 5;
-    a = b + 1;
-    if (a > 4)
-    {
-    printf(a);
-    }
+    b = fctr(5);
+    printf(b);
 }$
