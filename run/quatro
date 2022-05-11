@@ -6,10 +6,24 @@ define main()
     scanf(b);
     c = 0;
     scanf(c);
+    printf(a);
+    printf(b);
+    printf(c);
+    x = 0;
+    y = 0;
+    d = 0;
+    s = 0;    
     if (a == 0)
     {
-    printf(0);
-    x = (-1 * c) / b;
+    if (b == 0)
+    {
+    printf(3);
+    }
+    if (b != 0)
+    {
+    x = (0 - c) / b;
+    printf(x);
+    }
     }
     if (a != 0)
     {
@@ -18,10 +32,14 @@ define main()
     {
     printf(0);
     }
-    if (d >= 0)
+    if (d > 0)
     {
     s = sqrt(d);
-    printf(s);
+    x = (s - b) / (2 * a);
+    printf(x);
+    y = (0 - s - b) / (2 * a);
+    printf(y);
     }
     }
+    return 0;
 }$

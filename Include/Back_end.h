@@ -16,10 +16,18 @@
         int ram_indx;
     };
 
+    struct IfStack
+    {
+        int data[100];
+        int if_amnt;
+        int data_size;
+    };
+
     struct Glob_Name_space
     {
         Stack global_vars;
         Stack func;
+        IfStack ifs;
     };
     
 

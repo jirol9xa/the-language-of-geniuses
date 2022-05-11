@@ -908,7 +908,7 @@ static Node *GetPriority(Tokens_t *tokens, int *iter)
 
             return value;
         }
-
+        fprintf(stderr, "value.str = %s\n", tokens->array[*iter]->value.str);
         SYNTAX_ERR;
     }
     else
@@ -1071,7 +1071,7 @@ static Node *GetAddSub(Tokens_t *tokens, int *iter)
     Node *oper = nullptr;
     Node *value = GetMulDiv(tokens, iter);
 
-    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-&&||=", tokens->array[*iter]->value.str[0]))
+    while (tokens->array[*iter]->node_type.bytes.is_operator && strchr("+-&&|!|=", tokens->array[*iter]->value.str[0]))
     {
         oper = tokens->array[*iter];
         oper->left_child = value;

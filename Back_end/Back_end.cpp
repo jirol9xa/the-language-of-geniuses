@@ -101,8 +101,7 @@ static int   findElem        (Stack *name_space, char *elem);
 }
 
 
-int IF_AMNT = 0;
-
+//int IF_AMNT = 0;
 
 static Name *nameCtor()
 {
@@ -214,16 +213,17 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
         //
         
         int shift = -1;
-        if (name_space)
+        if (name_space) //  try to find in locals
         {
             PRINT_LINE;
             printf("Name to find = %s\n", new_var->name);
             shift      = findElem(name_space, new_var->name);
+            fprintf(stderr, "shift = %d\n", shift);
         }
         PRINT_LINE;
         int glob_shift = findElem(&(glob_name_space->global_vars), new_var->name);
 
-        if (name_space && shift == -1) //for local vars
+        if (name_space || (shift == -1)) //for local vars
         {
             if (shift == -1) //if doesn't exist
             {
@@ -615,6 +615,8 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
 
     auto node_type = node->node_type.bytes;
 
+    int curr_if = glob_name_space->ifs.data[glob_name_space->ifs.data_size - 1];
+
     PRINT_LINE;
 
     //SHOW_NAMES(name_space);
@@ -651,29 +653,29 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
             case '>':
                 if (node->value.str[1] == '=')
                 {
-                    writeLogs("JAE TRUE%d\n", IF_AMNT);
-                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                    writeLogs("JAE TRUE%d\n", curr_if);
+                    writeLogs("JMP FALSE%d\n", curr_if);
                 }
                 else
                 {
-                    writeLogs("JA TRUE%d\n", IF_AMNT);
-                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                    writeLogs("JA TRUE%d\n", curr_if);
+                    writeLogs("JMP FALSE%d\n", curr_if);
                 }
                 break;
             case '<':
                 if (node->value.str[1] == '=')
                 {
-                    writeLogs("JBE TRUE%d\n", IF_AMNT);
-                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                    writeLogs("JBE TRUE%d\n", curr_if);
+                    writeLogs("JMP FALSE%d\n", curr_if);
                 }
-                writeLogs("JB TRUE%d\n", IF_AMNT);
-                writeLogs("JMP FALSE%d\n", IF_AMNT);
+                writeLogs("JB TRUE%d\n", curr_if);
+                writeLogs("JMP FALSE%d\n", curr_if);
                 break;
             case '=':
                 if (node->value.str[1] == '=')
                 {
-                    writeLogs("JE TRUE%d\n", IF_AMNT);
-                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                    writeLogs("JE TRUE%d\n", curr_if);
+                    writeLogs("JMP FALSE%d\n", curr_if);
                 }
                 else
                 {
@@ -683,8 +685,8 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
             case '!':
                 if (node->value.str[1] == '=')
                 {
-                    writeLogs("JNE TRUE%d\n", IF_AMNT);
-                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                    writeLogs("JNE TRUE%d\n", curr_if);
+                    writeLogs("JMP FALSE%d\n", curr_if);
                 }
                 else
                 {
@@ -756,8 +758,8 @@ static int findElem(Stack *name_space, char *elem)
     {
         Name name_member = name_space->data[i];
         printf("i = %d\n", i);
-        printf("name_member name = %p\n", name_space->data[i].name);
-        printf("elem = %p\n", elem);
+        printf("name_member name = %s\n", name_space->data[i].name);
+        printf("elem = %s\n", elem);
         PRINT_LINE;
         if (!strcmp(name_member.name, elem))
         {
@@ -855,24 +857,33 @@ static int generateIf(Node *node, Glob_Name_space *glob_name_space, Stack *name_
     assert(glob_name_space);
     assert(name_space);
 
-    IF_AMNT++;
+    //IF_AMNT++;
+    IfStack* if_stack = &(glob_name_space->ifs);
+    if_stack->if_amnt++;
+    if_stack->data[if_stack->data_size] = if_stack->if_amnt;
+    if_stack->data_size++;
+
+    int if_amnt = if_stack->if_amnt;
 
     Node *decision = node->right_child;
 
     generateMath(node->left_child, glob_name_space, name_space);
 
-    writeLogs(":TRUE%d\n", IF_AMNT);
+    writeLogs(":TRUE%d\n", if_amnt);
     generateStmnt(decision->left_child, glob_name_space, name_space);
-    writeLogs("JMP END%d\n", IF_AMNT);
+    writeLogs("JMP END%d\n", if_amnt);
 
-    writeLogs(":FALSE%d\n", IF_AMNT);
+    writeLogs(":FALSE%d\n", if_amnt);
     if (decision->right_child)
     {
         generateStmnt(decision->right_child, glob_name_space, name_space);
     }
-    writeLogs("JMP END%d\n", IF_AMNT);
+    writeLogs("JMP END%d\n", if_amnt);
 
-    writeLogs(":END%d\n", IF_AMNT);
+    writeLogs(":END%d\n", if_amnt);
+
+    if_stack->data_size--;
+    if_stack->data[if_stack->data_size] = 0;
 
     return 0;
 }

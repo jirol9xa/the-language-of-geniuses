@@ -178,7 +178,7 @@ static int readArg(Node *node, char *text, Suff_Tree *suff_tree)
         return i + size + 1;
     }
 
-    sscanf(text + i, "%m[a-zA-Z_*=<>&|+-0-9]%n", &(node->value.str), &size);
+    sscanf(text + i, "%m[a-zA-Z_*=<>!&|+-0-9]%n", &(node->value.str), &size);
 
     int status = isKeyword(node->value.str, suff_tree);
     if (!strcmp(node->value.str, "call"))
