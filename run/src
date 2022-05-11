@@ -1,15 +1,7 @@
-define fctr(n)
-{
-   if (n == 1)
-   {
-   return 1;
-   }
-   a = n - 1;
-   p = fctr(a);
-   return p * n;
-}
 define main()
 {
-    b = fctr(5);
+    a = 0;
+    scanf(a);
+    b = sqrt(a) + sqrt(9);
     printf(b);
 }$

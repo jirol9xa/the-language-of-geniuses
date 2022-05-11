@@ -26,6 +26,7 @@ static int   generateFuncCode(Node *node,  Glob_Name_space *glob_name_space, Sta
 static int   generateMath    (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generateIf      (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   generatePrintf  (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
+static int   generateScanf   (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space);
 static int   addNewName      (Node *node,  Glob_Name_space *glob_name_space, Stack *name_space, int  is_var, int *shift);
 static int   makeArgs        (Node *node,  Stack *name_space);
 static int   addNewFunc      (Glob_Name_space *global_name_space, char *name);
@@ -275,6 +276,11 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
     {
         PRINT_LINE;
         generatePrintf(node, glob_name_space, name_space);
+    }
+    else if (node_type.is_keyword == IS_SCANF)
+    {
+        PRINT_LINE;
+        generateScanf(node, glob_name_space, name_space);
     }
 
     PRINT_LINE;
@@ -705,6 +711,10 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
         //if exist var
         writeLogs("PUSH [bx + %d]\n", shift);
     }
+    else if (node->node_type.number == IS_SQRT)
+    {
+        writeLogs("SQRT\n");
+    }
 
     //SHOW_NAMES(name_space);
 
@@ -870,4 +880,46 @@ static int generatePrintf(Node *node,  Glob_Name_space *glob_name_space, Stack *
     writeLogs("POP\n");
 
     return 0;
+}
+
+
+static int generateScanf(Node *node, Glob_Name_space *glob_name_space, Stack *name_space)
+{
+    assert(node);
+    assert(glob_name_space);
+    assert(name_space);
+    assert(node->right_child);
+
+    Node *rigth = node->right_child;
+
+    if (!rigth->node_type.bytes.is_variable)
+    {
+        fprintf(stderr, "Can't make scanf for number of math expression!!!\n");
+        SYNTAX_ERR;
+    }
+
+    writeLogs("IN\n");
+
+    char *name = rigth->value.str;
+
+    int index = findElem(name_space, name);
+    if (index >= 0)
+    {
+        writeLogs("POP [bx + %d]\n", index);
+    }
+    else
+    {
+        index = findElem(&(glob_name_space->global_vars), name);
+        if (index >= 0)
+        {
+            PRINT_LINE;
+            writeLogs("!!!!GLOBAL2\n");
+            writeLogs("POP [%d]\n", index);
+        }
+        else
+        {
+            printf("!!! ERROR Can't find variable \"%s\" !!!\n", name);
+            SYNTAX_ERR;
+        }
+    }
 }

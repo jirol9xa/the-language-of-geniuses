@@ -35,10 +35,11 @@ static Node *GetStatement      (Tokens_t *tokens, int *iter);
 static Node *GetExternStatement(Tokens_t *tokens, int *iter);
 static Node *GetGlobal         (Tokens_t *tokens, int *iter, int is_const);
 static Node *GetArgs           (Tokens_t *tokens, int *iter, int for_global);
-static int   skipBrkts         (Tokens_t *tokens, int *iter, int is_open, int is_round);
 static Node *GetAddSub         (Tokens_t *tokens, int *iter);
 static Node *GetDefine         (Tokens_t *tokens, int *iter);
-static Node *GetPrintf          (Tokens_t *tokens, int *iter);
+static Node *GetPrintf         (Tokens_t *tokens, int *iter);
+static Node *GetScanf          (Tokens_t *tokens, int *iter);
+static int   skipBrkts         (Tokens_t *tokens, int *iter, int is_open, int is_round);
 
 
 #define FIRST_SYMB(iter) tokens->array[*iter]->value.str[0]
@@ -449,6 +450,12 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
         return stmnt;
     }
 
+    if (token_type.is_keyword == IS_SCANF)
+    {
+        stmnt->right_child = GetScanf(tokens, iter);
+        return stmnt;
+    }
+
     if (!token_type.is_func && !token_type.is_variable && token_type.is_keyword != IS_RETURN)
     {
         printf("%s\n", tokens->array[*iter]->value.str);
@@ -691,6 +698,21 @@ static Node *GetNumVar(Tokens_t *tokens, int *iter, int is_func)
     if (node->node_type.bytes.is_number || node->node_type.bytes.is_variable)
     {
         INC(iter);
+
+        return node;
+    }
+    if (node->node_type.number == IS_SQRT)
+    {
+        (*iter)++;
+        if (tokens->array[*iter]->value.str[0] != '(' || tokens->array[*iter + 2]->value.str[0] != ')' || 
+            !(tokens->array[*iter + 1]->node_type.bytes.is_number || tokens->array[*iter + 1]->node_type.bytes.is_variable))
+        {
+            fprintf(stderr, "Can't make sqrt to math expression or func\n");
+            SYNTAX_ERR;
+        }
+        node->right_child = tokens->array[(*iter) + 1];
+
+        *(iter) += 3;
 
         return node;
     }
@@ -1146,6 +1168,23 @@ static Node *GetPrintf(Tokens_t *tokens, int *iter)
     Node *node = tokens->array[(*iter)++];
 
     node->right_child = GetAddSub(tokens, iter);
+
+    skipEndl(tokens, iter);
+
+    return node;
+}
+
+
+static Node *GetScanf(Tokens_t *tokens, int *iter)
+{
+    assert(tokens);
+    assert(iter);
+
+    Node *node = tokens->array[(*iter)++];
+
+    node->right_child = GetAddSub(tokens, iter);
+
+    auto node_type = node->right_child->node_type.bytes;
 
     skipEndl(tokens, iter);
 

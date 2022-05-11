@@ -13,7 +13,7 @@
 #include "Back_end.h"
 
 
-const char *RESERVED_WORDS = "if8193$else8204$while2$return8195$sin9$cos10$ln11$main5$const4$statement8199$define8198$func8200$decision8202$param8203$call8201$printf8205$"; //fix codes
+const char *RESERVED_WORDS = "if8193$else8204$while2$return8195$sin10$cos11$ln12$sqrt13$main5$const4$statement8199$define8198$func8200$decision8202$param8203$call8201$printf8205$scanf8206$"; //fix codes
 int LETTERS_AMOUNT = 26;
 
 
