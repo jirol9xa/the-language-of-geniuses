@@ -119,7 +119,7 @@ static int constructTokens(Tokens_t *tokens, char *string, Suff_Tree *suff_tree)
             tokens->array[tokens->size] = number();
             tokens->size++;
         }
-        else if (*STRING >= 'a' && *STRING <= 'z' || *STRING >= 'A' && *STRING <= 'Z')
+        else if (*STRING >= 'a' && *STRING <= 'z' || *STRING >= 'A' && *STRING <= 'Z' || *STRING == '_')
         {
             tokens->array[tokens->size] = identific();
             tokens->size++;
@@ -253,7 +253,7 @@ static Node *oper()
     node->value.str[0] = *STRING++;
     node->value.str[1] = '\0';
 
-    if (strchr("<>=", node->value.str[0]))
+    if (strchr("<>!=", node->value.str[0]))
     {
         if (*STRING == '=')
         {
@@ -281,7 +281,7 @@ static Node *oper()
     STRING += skipSpace(STRING);
     node->node_type.bytes.is_operator = 1;
 
-    if (!strchr("+-/*^()$>=<{};,&|", node->value.str[0]))
+    if (!strchr("+-/*^()$>=<{};,&|!", node->value.str[0]))
     {
         printf("String + 1 = %c\n", *STRING);
         printf("node->value.str[0] = %c\n", node->value.str[0]);

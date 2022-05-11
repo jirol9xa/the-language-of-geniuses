@@ -1,0 +1,27 @@
+define main()
+{
+    a = 0;
+    scanf(a);
+    b = 0;
+    scanf(b);
+    c = 0;
+    scanf(c);
+    if (a == 0)
+    {
+    printf(0);
+    x = (-1 * c) / b;
+    }
+    if (a != 0)
+    {
+    d = b * b - 4 * a * c;
+    if (d < 0)
+    {
+    printf(0);
+    }
+    if (d >= 0)
+    {
+    s = sqrt(d);
+    printf(s);
+    }
+    }
+}$

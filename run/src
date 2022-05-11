@@ -2,6 +2,8 @@ define main()
 {
     a = 0;
     scanf(a);
-    b = sqrt(a) + sqrt(9);
-    printf(b);
+    if (a != 5)
+    {
+    printf(a);
+    }
 }$

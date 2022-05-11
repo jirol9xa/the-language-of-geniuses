@@ -680,6 +680,17 @@ static int generateMath(Node *node, Glob_Name_space *glob_name_space, Stack *nam
                     SYNTAX_ERR;
                 }
                 break;
+            case '!':
+                if (node->value.str[1] == '=')
+                {
+                    writeLogs("JNE TRUE%d\n", IF_AMNT);
+                    writeLogs("JMP FALSE%d\n", IF_AMNT);
+                }
+                else
+                {
+                    SYNTAX_ERR;
+                }
+                break;
         } 
     }
     else if (node_type.is_variable)
