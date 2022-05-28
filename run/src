@@ -1,45 +1,17 @@
+define fctr(n)
+{
+   if (n == 1)
+   {
+   return 1;
+   }
+   a = n - 1;
+   p = fctr(a);
+   return p * n;
+}
 define main()
 {
     a = 0;
     scanf(a);
-    b = 0;
-    scanf(b);
-    c = 0;
-    scanf(c);
-    printf(a);
+    b = fctr(a);
     printf(b);
-    printf(c);
-    x = 0;
-    y = 0;
-    d = 0;
-    s = 0;    
-    if (a == 0)
-    {
-    if (b == 0)
-    {
-    printf(3);
-    }
-    if (b != 0)
-    {
-    x = (0 - c) / b;
-    printf(x);
-    }
-    }
-    if (a != 0)
-    {
-    d = b * b - 4 * a * c;
-    if (d < 0)
-    {
-    printf(0);
-    }
-    if (d > 0)
-    {
-    s = sqrt(d);
-    x = (s - b) / (2 * a);
-    printf(x);
-    y = (0 - s - b) / (2 * a);
-    printf(y);
-    }
-    }
-    return 0;
 }$

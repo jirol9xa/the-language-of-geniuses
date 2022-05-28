@@ -7,6 +7,67 @@ POP ax
 POP cx
 POP dx
 JMP main
+:fctr
+PUSH [bx + 0]
+PUSH 1
+JE TRUE1
+JMP FALSE1
+:TRUE1
+PUSH 1
+POP cx
+:RET
+JMP END1
+:FALSE1
+JMP END1
+:END1
+PUSH [bx + 0]
+PUSH 1
+SUB
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
+PUSH ax
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
+PUSH bx
+POP dx
+PUSH ax
+PUSH bx
+ADD
+POP bx
+PUSH 0
+POP ax
+PUSH [dx + 1]
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
+:CALL fctr
+PUSH cx
+PUSH [bx - 1]
+POP ax
+PUSH bx
+PUSH ax
+SUB
+PUSH 1
+SUB
+POP bx
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
+PUSH [bx + 2]
+PUSH [bx + 0]
+MUL
+POP cx
+:RET
 :main
 PUSH 0
 POP [bx + ax]
@@ -16,162 +77,42 @@ ADD
 POP ax
 IN
 POP [bx + 0]
-PUSH 0
+PUSH ax
 POP [bx + ax]
 PUSH ax
 PUSH 1
 ADD
 POP ax
-IN
-POP [bx + 1]
+PUSH bx
+POP dx
+PUSH ax
+PUSH bx
+ADD
+POP bx
 PUSH 0
+POP ax
+PUSH [dx + 0]
 POP [bx + ax]
 PUSH ax
 PUSH 1
 ADD
 POP ax
-IN
-POP [bx + 2]
-PUSH [bx + 0]
-OUT
-POP
-PUSH [bx + 1]
-OUT
-POP
-PUSH [bx + 2]
-OUT
-POP
-PUSH 0
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
+:CALL fctr
+PUSH cx
+PUSH [bx - 1]
 POP ax
-PUSH 0
-POP [bx + ax]
+PUSH bx
 PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH 0
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH 0
-POP [bx + ax]
-PUSH ax
-PUSH 1
-ADD
-POP ax
-PUSH [bx + 0]
-PUSH 0
-JE TRUE1
-JMP FALSE1
-:TRUE1
-PUSH [bx + 1]
-PUSH 0
-JE TRUE2
-JMP FALSE2
-:TRUE2
-PUSH 3
-OUT
-POP
-JMP END2
-:FALSE2
-JMP END2
-:END2
-PUSH [bx + 1]
-PUSH 0
-JNE TRUE3
-JMP FALSE3
-:TRUE3
-PUSH 0
-PUSH [bx + 2]
 SUB
+PUSH 1
+SUB
+POP bx
+POP [bx + ax]
+PUSH ax
+PUSH 1
+ADD
+POP ax
 PUSH [bx + 1]
-DIV
-POP [bx + 3]
-PUSH [bx + 3]
 OUT
 POP
-JMP END3
-:FALSE3
-JMP END3
-:END3
-JMP END1
-:FALSE1
-JMP END1
-:END1
-PUSH [bx + 0]
-PUSH 0
-JNE TRUE4
-JMP FALSE4
-:TRUE4
-PUSH [bx + 1]
-PUSH [bx + 1]
-MUL
-PUSH 4
-PUSH [bx + 0]
-MUL
-PUSH [bx + 2]
-MUL
-SUB
-POP [bx + 5]
-PUSH [bx + 5]
-PUSH 0
-JB TRUE5
-JMP FALSE5
-:TRUE5
-PUSH 0
-OUT
-POP
-JMP END5
-:FALSE5
-JMP END5
-:END5
-PUSH [bx + 5]
-PUSH 0
-JA TRUE6
-JMP FALSE6
-:TRUE6
-PUSH [bx + 5]
-SQRT
-POP [bx + 6]
-PUSH [bx + 6]
-PUSH [bx + 1]
-SUB
-PUSH 2
-PUSH [bx + 0]
-MUL
-DIV
-POP [bx + 3]
-PUSH [bx + 3]
-OUT
-POP
-PUSH 0
-PUSH [bx + 6]
-SUB
-PUSH [bx + 1]
-SUB
-PUSH 2
-PUSH [bx + 0]
-MUL
-DIV
-POP [bx + 4]
-PUSH [bx + 4]
-OUT
-POP
-JMP END6
-:FALSE6
-JMP END6
-:END6
-JMP END4
-:FALSE4
-JMP END4
-:END4
-PUSH 0
-POP cx
-:RET
 HLT

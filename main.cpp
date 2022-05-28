@@ -22,6 +22,7 @@ int main(const int argc, const char **argv)
         fprintf(stderr, "Can't open src file, sourse = %p!!!\n", sourse);
         return 0;
     }
+
     fprintf(stderr, "src = %p\n", sourse);
 
     Tree tree = {};

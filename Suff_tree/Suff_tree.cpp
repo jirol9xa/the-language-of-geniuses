@@ -3,12 +3,13 @@
 #include <assert.h>
 #include <string.h>
 #include <cmath>
+#include <stdlib.h>
 #include "Logger.h"
 #include "Suff_tree.h"
 #include "Syntax.h"
 
 
-extern const char *RESERVED_WORDS;
+extern char *RESERVED_WORDS;
 extern int         LETTERS_AMOUNT;
 
 
@@ -128,7 +129,7 @@ Suff_Tree *suffTreeCtor()
     {
         int wrd_size = 0;
 
-        while (RESERVED_WORDS[wrd_size + i] >= 'a' && RESERVED_WORDS[wrd_size + i] <= 'z')
+        while (RESERVED_WORDS[wrd_size + i] >= 'a' && RESERVED_WORDS[wrd_size + i] <= 'z' || RESERVED_WORDS[wrd_size + i] == '_')
         {
             wrd_size++;
         }
