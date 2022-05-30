@@ -167,16 +167,17 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
 {
     assert(stmnt);
     assert(glob_name_space);
+    //assert(name_space);
 
     if (stmnt->left_child)
     {   
         generateStmnt(stmnt->left_child, glob_name_space, name_space);
     }
 
-    if (name_space)
-    {
-        //SHOW_NAMES(name_space);
-    }
+    //if (name_space)
+    //{
+    //    SHOW_NAMES(name_space);
+    //}
 
     Node *node = stmnt->right_child;
     auto node_type = node->node_type.bytes;
@@ -252,12 +253,12 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
     else if (node_type.is_keyword == IS_DEFINE)
     {
         PRINT_LINE;
-        generateDefine(node, glob_name_space,name_space);
+        generateDefine(node, glob_name_space, name_space);
     }
     else if (node_type.is_keyword == IS_RETURN)
     {
         PRINT_LINE;
-        generateMath(node->right_child, glob_name_space,name_space);
+        generateMath(node->right_child, glob_name_space, name_space);
         
         writeLogs("POP cx\n");
         writeLogs(":RET\n");
@@ -279,7 +280,7 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
     }
     else if (node_type.is_keyword == IS_SCANF)
     {
-        PRINT_LINE;
+        fprintf(stderr, "name_space = %p\n", name_space);
         generateScanf(node, glob_name_space, name_space);
     }
 
@@ -368,21 +369,19 @@ static int generateDefine(Node *node, Glob_Name_space *glob_name_space, Stack *n
     stackCtor(&Name_space, 0);
 
     Node *func_node = node->left_child;
-    PRINT_LINE;
-    printf("func name = %s\n", func_node->left_child->value.str);
-    printf("is_args = %d\n", func_node->right_child != nullptr);
+
+    // printf("func name = %s\n", func_node->left_child->value.str);
+    // printf("is_args = %d\n", func_node->right_child != nullptr);
     // хорошая идея, но пока не надо
     addNewFunc(glob_name_space, func_node->left_child->value.str);
-    PRINT_LINE;
+
     if (func_node->right_child)
     {
-        PRINT_LINE;
         makeArgs(func_node->right_child, &Name_space);
     }
-    PRINT_LINE;
     writeLogs(":%s\n", func_node->left_child->value.str);
 
-    SHOW_NAMES(&Name_space);
+    //SHOW_NAMES(&Name_space);
 
     if (node->right_child)
     {
@@ -748,27 +747,30 @@ static int findElem(Stack *name_space, char *elem)
     assert(name_space);
     assert(elem);
 
-    PRINT_LINE;
-    printf("stck sz = %d\n", name_space->size);
-    printf("stack data = %p\n", name_space->data);
+    //PRINT_LINE;
+    //printf("stck sz = %d\n", name_space->size);
+    //printf("stack data = %p\n", name_space->data);
 
     //SHOW_NAMES(name_space);
 
     for (int i = name_space->size - 1 ; i >= 0; i--)
     {
         Name name_member = name_space->data[i];
-        printf("i = %d\n", i);
-        printf("name_member name = %s\n", name_space->data[i].name);
-        printf("elem = %s\n", elem);
-        PRINT_LINE;
+
+        //printf("i = %d\n", i);
+        //printf("name_member name = %s\n", name_space->data[i].name);
+        //printf("elem = %s\n", elem);
+        //PRINT_LINE;
+        
         if (!strcmp(name_member.name, elem))
         {
-            PRINT_LINE;
+        //    PRINT_LINE;
             return (name_member.Ntype.is_func) * (-2) + name_member.Ntype.is_var * i;
         }
-        PRINT_LINE;
+        //PRINT_LINE;
     }
-    PRINT_LINE;
+    
+    //PRINT_LINE;
     return -1;
 }
 
@@ -920,6 +922,8 @@ static int generateScanf(Node *node, Glob_Name_space *glob_name_space, Stack *na
         SYNTAX_ERR;
     }
 
+    PRINT_LINE;
+
     writeLogs("IN\n");
 
     char *name = rigth->value.str;
@@ -944,4 +948,6 @@ static int generateScanf(Node *node, Glob_Name_space *glob_name_space, Stack *na
             SYNTAX_ERR;
         }
     }
+
+    return 0;
 }

@@ -17,7 +17,7 @@
 
 char *RESERVED_WORDS = nullptr;//"if8193$else8204$while2$return8195$sin10$cos11$ln12$sqrt13$main5$const4$statement8199$define8198$func8200$decision8202$param8203$call8201$printf8205$scanf8206$"; //fix codes
 int LETTERS_AMOUNT = 26;
-
+const char *TEMP_WORDS = "if8193$else8204$while2$return8195$sin10$cos11$ln12$sqrt13$main5$const4$statement8199$define8198$func8200$decision8202$param8203$call8201$printf8205$scanf8206$";
 
 static int fillResWords(FILE *cmd_file);
 
@@ -121,14 +121,15 @@ static int fillResWords(FILE *cmd_file)
     while (*buff != '\0')
     {
         buff += skipSymbs(buff);
-        
+        sscanf(buff, "%s", cmd);
+
         int cmd_length = strlen(cmd);
         res_len += cmd_length;
         buff    += cmd_length;
-        
+
         buff += skipSymbs(buff);
         buff += skipSymbs(buff);
-        
+
         sscanf(buff, " %d ", &code);  // scanning cmd code
         res_len += 4;
         buff    += 4;
@@ -136,7 +137,7 @@ static int fillResWords(FILE *cmd_file)
         buff += skipSymbs(buff);
         buff++;
 
-        if (res_len >= res_cap - 1)
+        if (res_len >= res_cap - 2)
         {
             res_cap *= 2;
 
@@ -147,7 +148,9 @@ static int fillResWords(FILE *cmd_file)
         
         strcat(RESERVED_WORDS, cmd);
         strcat(RESERVED_WORDS, itoa10(code, str_code));
+        
         RESERVED_WORDS[res_len++] = '$';
+        RESERVED_WORDS[res_len] = '\0';
     }
 
     RESERVED_WORDS[res_len] = '\0';

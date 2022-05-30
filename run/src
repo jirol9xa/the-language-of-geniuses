@@ -10,8 +10,8 @@ define fctr(n)
 }
 define main()
 {
-    a = 0;
-    scanf(a);
-    b = fctr(a);
+    a1 = 0;
+    scanf(a1);
+    b = fctr(a1);
     printf(b);
 }$

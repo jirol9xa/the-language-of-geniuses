@@ -149,12 +149,10 @@ Suff_Tree *suffTreeCtor()
             (*edge)->status = status;
 
             i += wrd_size + 1 + num_size;
-
             continue;
         }
 
         addWord(*edge, i, wrd_size, status);
-
         i += wrd_size + 1 + num_size;
     }
 
