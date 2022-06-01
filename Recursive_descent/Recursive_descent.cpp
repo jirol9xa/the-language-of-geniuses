@@ -208,7 +208,7 @@ static int tokensDtor(Tokens_t *tokens)
 
 static Node *number()
 {
-    Node *node = (Node *)calloc(1, sizeof(Node));
+    Node *node   = (Node *) calloc(1, sizeof(Node));
     double value = 0;
 
     while (*STRING >= '0' && *STRING <= '9')
@@ -220,7 +220,7 @@ static Node *number()
     STRING += skipSpace(STRING);
 
     node->node_type.bytes.is_number = 1;
-    node->value.number = value;
+    node->value.number              = value;
 
     return node;
 }
@@ -228,8 +228,8 @@ static Node *number()
 
 static Node *identific()
 {
-    Node *node = (Node *)calloc(1, sizeof(Node));
-    char buffer[33] = {};
+    Node *node      = (Node *)calloc(1, sizeof(Node));
+    char buffer[32 + 1] = {};   // make const MAX_LEN
 
     sscanf(STRING, "%[a-zA-Z0-9_-]", buffer);
 
@@ -435,11 +435,9 @@ static Node *readStatement(Tokens_t *tokens, int *iter)
     auto token_type = tokens->array[*iter]->node_type.bytes;
 
     if (token_type.is_keyword > 0)  fprintf(stderr, "token value = %s\n", tokens->array[*iter]->value.str);
-    PRINT_LINE;
 
     if (token_type.is_keyword == IS_IF)
     {
-        PRINT_LINE;
         stmnt->right_child = GetIf(tokens, iter);
         return stmnt;
     }
@@ -1094,8 +1092,7 @@ static Node *GetGlobal(Tokens_t *tokens, int *iter, int is_const)
     (*iter) += is_const;
 
     Node *name_node = tokens->array[(*iter)++];
-
-    Node *equal = tokens->array[(*iter)++];
+    Node *equal     = tokens->array[(*iter)++];
 
     if (!equal->node_type.bytes.is_operator || equal->value.str[0] != '=')
     {

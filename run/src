@@ -1,17 +1,15 @@
-define fctr(n)
-{
-   if (n == 1)
-   {
-   return 1;
-   }
-   a = n - 1;
-   p = fctr(a);
-   return p * n;
+define a0 ( a1 ) {
+if ( a1 == 1 ) {
+return 1 ;
 }
-define main()
-{
-    a1 = 0;
-    scanf(a1);
-    b = fctr(a1);
-    printf(b);
-}$
+a2 = a1 - 1 ;
+a3 = a0 ( a2 ) ;
+return a2 * a1 ;
+}
+define main ( ) {
+a4 = 0 ;
+scanf ( a4 ) ;
+a5 = a0 ( a4 ) ;
+printf ( a5 ) ;
+}
+$

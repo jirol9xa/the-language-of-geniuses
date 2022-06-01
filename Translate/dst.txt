@@ -1,0 +1,6 @@
+define main
+{
+a0 = 0 ;
+printf ( a0 ) ;
+}
+$

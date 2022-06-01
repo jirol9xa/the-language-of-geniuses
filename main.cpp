@@ -6,17 +6,25 @@
 #include "Logger.h"
 #include "Language.h"
 #include "Suff_tree.h"
-
+#include "Trans.h"
 
 int main(const int argc, const char **argv)
 {
-    //if (argc < 2)
-    //{
-    //    printf("!!! ERROR Can't run without sourse file !!!\n");
-    //    return -1;
-    //}
+    if (argc < 2)
+    {
+        printf("!!! ERROR Can't run without sourse file !!!\n");
+        return -1;
+    }
     
-    FILE *sourse = fopen("src"/*argv[1]*/, "r");
+    //FILE *rus_src = fopen("rus_src", "r");
+    //FILE *rus_dst = fopen("src", "w");
+    //
+    //makeTrans(rus_src, rus_dst);
+    //
+    //fclose(rus_src);
+    //fclose(rus_dst);
+    
+    FILE *sourse = fopen(argv[1], "r");
     if (!sourse)
     {
         fprintf(stderr, "Can't open src file, sourse = %p!!!\n", sourse);

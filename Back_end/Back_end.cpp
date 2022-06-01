@@ -167,24 +167,17 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
 {
     assert(stmnt);
     assert(glob_name_space);
-    //assert(name_space);
 
     if (stmnt->left_child)
     {   
         generateStmnt(stmnt->left_child, glob_name_space, name_space);
     }
 
-    //if (name_space)
-    //{
-    //    SHOW_NAMES(name_space);
-    //}
-
-    Node *node = stmnt->right_child;
+    Node *node     = stmnt->right_child;
     auto node_type = node->node_type.bytes;
 
     if (node_type.is_operator && node->value.str[0] == '=')
     {
-        PRINT_LINE;
         Node *left     = node->left_child;
         auto left_type = left->node_type.bytes;
 
@@ -193,19 +186,9 @@ static int generateStmnt(Node *stmnt, Glob_Name_space *glob_name_space, Stack *n
             SYNTAX_ERR;
         }
 
-        //SHOW_NAMES(name_space);
-
         generateMath(node->right_child, glob_name_space, name_space);
 
-        //SHOW_NAMES(name_space);
-
-        // adding var in name_space
-        // !!!!make function!!!!
-        //use nameDtor
         Name *new_var = nameCtor(); 
-
-        //SHOW_NAMES(name_space);
-
 
         strcpy(new_var->name, left->value.str);
         printf("newvar name = %s\n", new_var->name);
@@ -859,8 +842,8 @@ static int generateIf(Node *node, Glob_Name_space *glob_name_space, Stack *name_
     assert(glob_name_space);
     assert(name_space);
 
-    //IF_AMNT++;
     IfStack* if_stack = &(glob_name_space->ifs);
+    
     if_stack->if_amnt++;
     if_stack->data[if_stack->data_size] = if_stack->if_amnt;
     if_stack->data_size++;

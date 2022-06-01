@@ -7,7 +7,7 @@ POP ax
 POP cx
 POP dx
 JMP main
-:fctr
+:a0
 PUSH [bx + 0]
 PUSH 1
 JE TRUE1
@@ -48,7 +48,7 @@ PUSH ax
 PUSH 1
 ADD
 POP ax
-:CALL fctr
+:CALL a0
 PUSH cx
 PUSH [bx - 1]
 POP ax
@@ -97,7 +97,7 @@ PUSH ax
 PUSH 1
 ADD
 POP ax
-:CALL fctr
+:CALL a0
 PUSH cx
 PUSH [bx - 1]
 POP ax

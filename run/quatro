@@ -6,9 +6,6 @@ define main()
     scanf(b);
     c = 0;
     scanf(c);
-    printf(a);
-    printf(b);
-    printf(c);
     x = 0;
     y = 0;
     d = 0;
